@@ -21,6 +21,25 @@ interface ModelSelectorProps {
   onChange?: (model: string | null) => void;
 }
 
+// Static alias mapping: map full provider/model id to display name
+const MODEL_ALIASES: Record<string, string> = {
+  "openai/gpt-4o": "GP-K",
+  "anthropic/claude-3-5-sonnet-20241022": "KhayaL-AI",
+  "google/gemini-1.5-pro": "YE-21",
+};
+
+function getDisplayName(
+  provider: string | null,
+  model: string,
+  separator: string,
+): string {
+  // Build full id like provider/model or provider:model depending on separator
+  const fullId = provider ? `${provider}${separator}${model}` : model;
+  // For OpenAI, LiteLLM uses model without provider prefix, but we key by provider/model
+  const normalized = provider === "openai" ? `openai/${model}` : fullId.replace(":", "/");
+  return MODEL_ALIASES[normalized] || model;
+}
+
 export function ModelSelector({
   isDisabled,
   models,
@@ -168,7 +187,13 @@ export function ModelSelector({
                 models[selectedProvider || ""]?.models?.includes(model),
               )
               .map((model) => (
-                <AutocompleteItem key={model}>{model}</AutocompleteItem>
+                <AutocompleteItem key={model}>
+                  {getDisplayName(
+                    selectedProvider,
+                    model,
+                    models[selectedProvider || ""]?.separator || "/",
+                  )}
+                </AutocompleteItem>
               ))}
           </AutocompleteSection>
           {models[selectedProvider || ""]?.models?.some(
@@ -182,7 +207,11 @@ export function ModelSelector({
                     data-testid={`model-item-${model}`}
                     key={model}
                   >
-                    {model}
+                    {getDisplayName(
+                      selectedProvider,
+                      model,
+                      models[selectedProvider || ""]?.separator || "/",
+                    )}
                   </AutocompleteItem>
                 ))}
             </AutocompleteSection>
