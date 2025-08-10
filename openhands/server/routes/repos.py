@@ -20,6 +20,26 @@ from openhands.server.user_auth import get_provider_tokens
 from openhands.server.utils import get_conversation, get_conversation_metadata
 from openhands.server.session.conversation import ServerConversation
 from openhands.utils.async_utils import call_sync_from_async
+from openhands.server.services.jobs import job_manager, JobStatus
+from openhands.events.action.commands import CmdRunAction
+import asyncio
+
+
+@app.get('/diff')
+async def get_diff(
+    conversation: ServerConversation = Depends(get_conversation),
+    path: str = '',
+) -> JSONResponse:
+    try:
+        runtime: Runtime = conversation.runtime
+        # Reuse existing runtime.get_git_diff(path, cwd) which returns dict[str, Any]
+        cwd = runtime.config.workspace_mount_path_in_sandbox
+        diff = await call_sync_from_async(runtime.get_git_diff, path, cwd)
+        return JSONResponse(status_code=200, content=diff)
+    except Exception as e:
+        logger.error(f'Error getting diff for {path}: {e}')
+        return JSONResponse(status_code=500, content={'error': str(e)})
+
 
 app = APIRouter(
     prefix='/api/conversations/{conversation_id}/repos', dependencies=get_dependencies()
@@ -42,16 +62,19 @@ async def open_repository(
         repo = payload.repository
         branch = payload.branch
         logger.info(f'Opening repository: repo={repo}, branch={branch}')
-        cloned_dir = await runtime.clone_or_init_repo(provider_tokens, repo, branch)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={'workspace_dir': cloned_dir or ''},
-        )
+        # Run clone in background job
+        job = job_manager.create_job('clone')
+
+        async def _task():
+            return await runtime.clone_or_init_repo(provider_tokens, repo, branch)
+
+        asyncio.create_task(job_manager.run_job(job.id, _task))
+        return JSONResponse(status_code=202, content={'job_id': job.id})
     except Exception as e:
-        logger.error(f'Error opening repository: {e}')
+        logger.error(f'Error scheduling repository open: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': f'Error opening repository: {e}'},
+            content={'error': f'Error scheduling repository open: {e}'},
         )
 
 
@@ -130,6 +153,24 @@ async def write_file(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={'error': f'Error writing file: {e}'},
         )
+
+
+@app.get('/jobs/{job_id}')
+async def get_job_status(job_id: str) -> JSONResponse:
+    job = job_manager.get_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={'error': 'Job not found'})
+    return JSONResponse(
+        status_code=200,
+        content={
+            'id': job.id,
+            'type': job.type,
+            'status': job.status,
+            'progress': job.progress,
+            'result': job.result,
+            'error': job.error,
+        },
+    )
 
 
 class CreateBranchRequest(BaseModel):

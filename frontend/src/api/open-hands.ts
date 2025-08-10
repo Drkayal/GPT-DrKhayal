@@ -785,6 +785,27 @@ class OpenHands {
     );
     return data;
   }
+
+  static async getRepoDiff(
+    conversationId: string,
+    path: string,
+  ): Promise<{ original: string; modified: string }> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/diff`;
+    const { data } = await openHands.get<{ original: string; modified: string }>(
+      url,
+      { params: { path } },
+    );
+    return data;
+  }
+
+  static async getRepoJobStatus(
+    conversationId: string,
+    jobId: string,
+  ): Promise<{ id: string; type: string; status: string; progress: number; result?: any; error?: string }>{
+    const url = `${this.getConversationUrl(conversationId)}/repos/jobs/${jobId}`;
+    const { data } = await openHands.get(url);
+    return data;
+  }
 }
 
 export default OpenHands;

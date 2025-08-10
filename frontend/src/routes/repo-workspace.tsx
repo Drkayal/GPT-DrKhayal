@@ -5,6 +5,7 @@ import { FileTree } from "#/components/features/files/file-tree";
 import { EditorPanel } from "#/components/features/files/editor-panel";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { GitBar } from "#/components/features/git/git-bar";
+import { JobCenter } from "#/components/features/jobs/job-center";
 
 export default function RepoWorkspaceScreen() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -12,13 +13,15 @@ export default function RepoWorkspaceScreen() {
   const [branchInput, setBranchInput] = React.useState("");
   const [currentFile, setCurrentFile] = React.useState<string | null>(null);
   const [isOpening, setIsOpening] = React.useState(false);
+  const [cloneJobId, setCloneJobId] = React.useState<string | null>(null);
 
   if (!conversationId) return null;
 
   const openRepo = async () => {
     setIsOpening(true);
     try {
-      await OpenHands.openRepo(conversationId, repoInput || undefined, branchInput || undefined);
+      const resp = await OpenHands.openRepo(conversationId, repoInput || undefined, branchInput || undefined);
+      if ((resp as any).job_id) setCloneJobId((resp as any).job_id);
     } finally {
       setIsOpening(false);
     }
@@ -51,6 +54,8 @@ export default function RepoWorkspaceScreen() {
       </div>
 
       <GitBar conversationId={conversationId} />
+
+      <JobCenter conversationId={conversationId} initialJobId={cloneJobId} />
 
       <div className="grid grid-cols-3 gap-4 h-[70vh]">
         <div className="col-span-1 border border-tertiary rounded">
