@@ -592,9 +592,12 @@ class OpenHands {
     path: string,
   ): Promise<{ path: string; content: string }> {
     const url = `${this.getConversationUrl(conversationId)}/repos/file`;
-    const { data } = await openHands.get<{ path: string; content: string }>(url, {
-      params: { path },
-    });
+    const { data } = await openHands.get<{ path: string; content: string }>(
+      url,
+      {
+        params: { path },
+      },
+    );
     return data;
   }
 
@@ -608,7 +611,10 @@ class OpenHands {
     return status === 200;
   }
 
-  static async sendCommand(conversationId: string, command: Record<string, any>): Promise<boolean> {
+  static async sendCommand(
+    conversationId: string,
+    command: Record<string, unknown>,
+  ): Promise<boolean> {
     const { status } = await openHands.post(`/api/options/commands`, {
       conversation_id: conversationId,
       command,
@@ -616,19 +622,30 @@ class OpenHands {
     return status === 200;
   }
 
-  static async createBranch(conversationId: string, name: string, from_ref?: string): Promise<boolean> {
+  static async createBranch(
+    conversationId: string,
+    name: string,
+    from_ref?: string,
+  ): Promise<boolean> {
     const url = `${this.getConversationUrl(conversationId)}/repos/branch`;
     const { status } = await openHands.post(url, { name, from_ref });
     return status === 200;
   }
 
-  static async commitChanges(conversationId: string, message: string, files?: string[]): Promise<boolean> {
+  static async commitChanges(
+    conversationId: string,
+    message: string,
+    files?: string[],
+  ): Promise<boolean> {
     const url = `${this.getConversationUrl(conversationId)}/repos/commit`;
     const { status } = await openHands.post(url, { message, files });
     return status === 200;
   }
 
-  static async createPullRequest(conversationId: string, title: string): Promise<string> {
+  static async createPullRequest(
+    conversationId: string,
+    title: string,
+  ): Promise<string> {
     const url = `${this.getConversationUrl(conversationId)}/repos/pr`;
     const { data } = await openHands.post<{ url: string }>(url, { title });
     return data.url;
@@ -791,19 +808,33 @@ class OpenHands {
     path: string,
   ): Promise<{ original: string; modified: string }> {
     const url = `${this.getConversationUrl(conversationId)}/repos/diff`;
-    const { data } = await openHands.get<{ original: string; modified: string }>(
-      url,
-      { params: { path } },
-    );
+    const { data } = await openHands.get<{
+      original: string;
+      modified: string;
+    }>(url, { params: { path } });
     return data;
   }
 
   static async getRepoJobStatus(
     conversationId: string,
     jobId: string,
-  ): Promise<{ id: string; type: string; status: string; progress: number; result?: any; error?: string }>{
+  ): Promise<{
+    id: string;
+    type: string;
+    status: string;
+    progress: number;
+    result?: unknown;
+    error?: string;
+  }> {
     const url = `${this.getConversationUrl(conversationId)}/repos/jobs/${jobId}`;
-    const { data } = await openHands.get(url);
+    const { data } = await openHands.get<{
+      id: string;
+      type: string;
+      status: string;
+      progress: number;
+      result?: unknown;
+      error?: string;
+    }>(url);
     return data;
   }
 }

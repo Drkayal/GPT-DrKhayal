@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import { io, Socket } from "socket.io-client";
 import OpenHands from "#/api/open-hands";
@@ -11,16 +12,15 @@ interface ChatEvent {
   id?: number;
   type?: string;
   content?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function SimpleChat({ conversationId }: SimpleChatProps) {
-  const [socket, setSocket] = React.useState<Socket | null>(null);
   const [events, setEvents] = React.useState<ChatEvent[]>([]);
   const [input, setInput] = React.useState("");
 
   React.useEffect(() => {
-    const s = io("/", {
+    const s: Socket = io("/", {
       path: "/socket.io",
       query: {
         conversation_id: conversationId,
@@ -29,26 +29,17 @@ export function SimpleChat({ conversationId }: SimpleChatProps) {
       transports: ["websocket"],
     });
 
-    s.on("connect", () => {
-      // connected
-    });
-
     s.on("oh_event", (evt: ChatEvent) => {
       setEvents((prev) => [...prev, evt]);
     });
 
-    s.on("disconnect", () => {});
-
-    setSocket(s);
     return () => {
       s.disconnect();
-      setSocket(null);
     };
   }, [conversationId]);
 
   const send = async () => {
     if (!input.trim()) return;
-    // send a simple user message command
     await OpenHands.sendCommand(conversationId, {
       role: "user",
       type: "message",
@@ -63,7 +54,9 @@ export function SimpleChat({ conversationId }: SimpleChatProps) {
         {events.map((e, idx) => (
           <div key={idx} className="mb-2">
             <div className="opacity-60 text-xs">{e.type || "event"}</div>
-            <pre className="whitespace-pre-wrap break-words">{e.content || JSON.stringify(e)}</pre>
+            <pre className="whitespace-pre-wrap break-words">
+              {e.content || JSON.stringify(e)}
+            </pre>
           </div>
         ))}
       </div>

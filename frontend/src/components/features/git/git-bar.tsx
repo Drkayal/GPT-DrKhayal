@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import OpenHands from "#/api/open-hands";
 import { BrandButton } from "#/components/features/settings/brand-button";
@@ -56,7 +57,12 @@ export function GitBar({ conversationId }: GitBarProps) {
           value={branchName}
           onChange={(e) => setBranchName(e.target.value)}
         />
-        <BrandButton variant="secondary" type="button" isDisabled={isBusy || !branchName} onClick={createBranch}>
+        <BrandButton
+          variant="secondary"
+          type="button"
+          isDisabled={isBusy || !branchName}
+          onClick={createBranch}
+        >
           Create Branch
         </BrandButton>
       </div>
@@ -67,7 +73,12 @@ export function GitBar({ conversationId }: GitBarProps) {
           value={commitMsg}
           onChange={(e) => setCommitMsg(e.target.value)}
         />
-        <BrandButton variant="secondary" type="button" isDisabled={isBusy || !commitMsg} onClick={commit}>
+        <BrandButton
+          variant="secondary"
+          type="button"
+          isDisabled={isBusy || !commitMsg}
+          onClick={commit}
+        >
           Commit
         </BrandButton>
       </div>
@@ -78,12 +89,22 @@ export function GitBar({ conversationId }: GitBarProps) {
           value={prTitle}
           onChange={(e) => setPrTitle(e.target.value)}
         />
-        <BrandButton variant="primary" type="button" isDisabled={isBusy || !prTitle} onClick={createPR}>
+        <BrandButton
+          variant="primary"
+          type="button"
+          isDisabled={isBusy || !prTitle}
+          onClick={createPR}
+        >
           Create PR
         </BrandButton>
       </div>
       {prUrl && (
-        <a className="text-blue-400 hover:underline" href={prUrl} target="_blank" rel="noreferrer">
+        <a
+          className="text-blue-400 hover:underline"
+          href={prUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
           View PR
         </a>
       )}

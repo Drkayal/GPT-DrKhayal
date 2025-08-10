@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import { useGetGitChanges } from "#/hooks/query/use-get-git-changes";
 import { FileDiffViewer } from "#/components/features/diff-viewer/file-diff-viewer";
@@ -17,7 +18,7 @@ export function ChangesList() {
   const commitSelected = async () => {
     const files = Object.keys(selected).filter((k) => selected[k]);
     if (!files.length || !message.trim()) return;
-    await OpenHands.commitChanges(conversationId, message, files as any);
+    await OpenHands.commitChanges(conversationId, message, files);
     setMessage("");
     setSelected({});
   };

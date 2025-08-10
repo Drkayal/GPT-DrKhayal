@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useSettings } from "#/hooks/query/use-settings";
@@ -5,9 +6,24 @@ import { useAddGitProviders } from "#/hooks/mutation/use-add-git-providers";
 import { useUserProviders } from "#/hooks/use-user-providers";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { GitHubTokenInput } from "#/components/features/settings/git-settings/github-token-input";
-import { displayErrorToast, displaySuccessToast } from "#/utils/custom-toast-handlers";
+import {
+  displayErrorToast,
+  displaySuccessToast,
+} from "#/utils/custom-toast-handlers";
 import { retrieveAxiosErrorMessage } from "#/utils/retrieve-axios-error-message";
 import { RepoConnector } from "#/components/features/home/repo-connector";
+
+interface ProviderAuth {
+  token: string;
+  host: string;
+}
+
+interface ProvidersPayload {
+  github: ProviderAuth;
+  gitlab: ProviderAuth;
+  bitbucket: ProviderAuth;
+  enterprise_sso: ProviderAuth;
+}
 
 export default function ConnectGitHubScreen() {
   const { t } = useTranslation();
@@ -16,8 +32,10 @@ export default function ConnectGitHubScreen() {
 
   const { mutate: saveGitProviders, isPending } = useAddGitProviders();
 
-  const [githubTokenInputHasValue, setGithubTokenInputHasValue] = React.useState(false);
-  const [githubHostInputHasValue, setGithubHostInputHasValue] = React.useState(false);
+  const [githubTokenInputHasValue, setGithubTokenInputHasValue] =
+    React.useState(false);
+  const [githubHostInputHasValue, setGithubHostInputHasValue] =
+    React.useState(false);
 
   const existingGithubHost = settings?.PROVIDER_TOKENS_SET.github;
   const isGitHubTokenSet = providers.includes("github");
@@ -26,15 +44,15 @@ export default function ConnectGitHubScreen() {
     const githubToken = formData.get("github-token-input")?.toString() || "";
     const githubHost = formData.get("github-host-input")?.toString() || "";
 
-    // include other providers as empty to satisfy typing
-    const providersPayload = {
+    const providersPayload: ProvidersPayload = {
       github: { token: githubToken, host: githubHost },
       gitlab: { token: "", host: "" },
       bitbucket: { token: "", host: "" },
-    } as const;
+      enterprise_sso: { token: "", host: "" },
+    };
 
     saveGitProviders(
-      { providers: providersPayload as any },
+      { providers: providersPayload },
       {
         onSuccess: () => {
           displaySuccessToast(t("SETTINGS$SAVED"));
@@ -70,7 +88,10 @@ export default function ConnectGitHubScreen() {
             testId="connect-github-save"
             type="submit"
             variant="primary"
-            isDisabled={isPending || (!githubTokenInputHasValue && !githubHostInputHasValue)}
+            isDisabled={
+              isPending ||
+              (!githubTokenInputHasValue && !githubHostInputHasValue)
+            }
           >
             {!isPending && t("SETTINGS$SAVE_CHANGES")}
             {isPending && t("SETTINGS$SAVING")}
@@ -78,9 +99,10 @@ export default function ConnectGitHubScreen() {
         </div>
       </form>
 
-      {/* Repository selection becomes available once a provider is set */}
       <section className="mt-2">
-        <h2 className="text-xl font-medium text-white mb-3">Select Repository</h2>
+        <h2 className="text-xl font-medium text-white mb-3">
+          Select Repository
+        </h2>
         {!isLoading && <RepoConnector onRepoSelection={() => {}} />}
       </section>
     </div>

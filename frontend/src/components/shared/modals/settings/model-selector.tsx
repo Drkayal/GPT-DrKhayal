@@ -34,10 +34,9 @@ function getDisplayName(
   model: string,
   separator: string,
 ): string {
-  // Build full id like provider/model or provider:model depending on separator
   const fullId = provider ? `${provider}${separator}${model}` : model;
-  // For OpenAI, LiteLLM uses model without provider prefix, but we key by provider/model
-  const normalized = provider === "openai" ? `openai/${model}` : fullId.replace(":", "/");
+  const normalized =
+    provider === "openai" ? `openai/${model}` : fullId.replace(":", "/");
   return MODEL_ALIASES[normalized] || model;
 }
 

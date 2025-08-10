@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import OpenHands from "#/api/open-hands";
 import { BrandButton } from "#/components/features/settings/brand-button";

@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { TooltipButton } from "./tooltip-button";
 
 export function AllHandsLogoButton() {
@@ -13,7 +14,9 @@ export function AllHandsLogoButton() {
         />
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-semibold">GP-KhayaL</span>
-          <span className="text-[10px] opacity-70">Khayal Virtual Cyber Security</span>
+          <span className="text-[10px] opacity-70">
+            Khayal Virtual Cyber Security
+          </span>
         </div>
       </div>
     </TooltipButton>

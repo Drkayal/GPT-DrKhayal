@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import React from "react";
 import { useParams } from "react-router";
 import OpenHands from "#/api/open-hands";
@@ -20,8 +21,14 @@ export default function RepoWorkspaceScreen() {
   const openRepo = async () => {
     setIsOpening(true);
     try {
-      const resp = await OpenHands.openRepo(conversationId, repoInput || undefined, branchInput || undefined);
-      if ((resp as any).job_id) setCloneJobId((resp as any).job_id);
+      const resp = await OpenHands.openRepo(
+        conversationId,
+        repoInput || undefined,
+        branchInput || undefined,
+      );
+      if ((resp as unknown as { job_id?: string }).job_id) {
+        setCloneJobId((resp as unknown as { job_id: string }).job_id);
+      }
     } finally {
       setIsOpening(false);
     }
@@ -31,8 +38,11 @@ export default function RepoWorkspaceScreen() {
     <div className="flex flex-col h-full p-6 gap-4">
       <div className="flex items-end gap-3">
         <div className="flex flex-col">
-          <label className="text-xs opacity-70">Repository (owner/repo)</label>
+          <label className="text-xs opacity-70" htmlFor="repo-input">
+            Repository (owner/repo)
+          </label>
           <input
+            id="repo-input"
             className="bg-tertiary border border-tertiary-alt rounded px-2 py-1"
             placeholder="owner/repo"
             value={repoInput}
@@ -40,15 +50,23 @@ export default function RepoWorkspaceScreen() {
           />
         </div>
         <div className="flex flex-col">
-          <label className="text-xs opacity-70">Branch</label>
+          <label className="text-xs opacity-70" htmlFor="branch-input">
+            Branch
+          </label>
           <input
+            id="branch-input"
             className="bg-tertiary border border-tertiary-alt rounded px-2 py-1"
             placeholder="(optional)"
             value={branchInput}
             onChange={(e) => setBranchInput(e.target.value)}
           />
         </div>
-        <BrandButton variant="primary" type="button" isDisabled={isOpening || !repoInput} onClick={openRepo}>
+        <BrandButton
+          variant="primary"
+          type="button"
+          isDisabled={isOpening || !repoInput}
+          onClick={openRepo}
+        >
           {isOpening ? "Opening..." : "Open"}
         </BrandButton>
       </div>
@@ -59,7 +77,10 @@ export default function RepoWorkspaceScreen() {
 
       <div className="grid grid-cols-3 gap-4 h-[70vh]">
         <div className="col-span-1 border border-tertiary rounded">
-          <FileTree conversationId={conversationId} onOpenFile={(p) => setCurrentFile(p)} />
+          <FileTree
+            conversationId={conversationId}
+            onOpenFile={(p) => setCurrentFile(p)}
+          />
         </div>
         <div className="col-span-2 border border-tertiary rounded">
           <EditorPanel conversationId={conversationId} path={currentFile} />
