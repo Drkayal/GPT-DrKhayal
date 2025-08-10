@@ -7,6 +7,15 @@ from openhands.security.options import SecurityAnalyzers
 from openhands.server.dependencies import get_dependencies
 from openhands.server.shared import config, server_config, conversation_manager
 from openhands.server.routes.manage_conversations import InitSessionRequest, new_conversation
+from openhands.server.user_auth import (
+    get_auth_type,
+    get_provider_tokens,
+    get_user_id,
+    get_user_secrets,
+)
+from openhands.server.user_auth.user_auth import AuthType
+from openhands.integrations.provider import PROVIDER_TOKEN_TYPE
+from openhands.storage.data_models.user_secrets import UserSecrets
 from openhands.utils.llm import get_supported_llm_models
 
 app = APIRouter(prefix='/api/options', dependencies=get_dependencies())
@@ -72,8 +81,20 @@ async def get_config() -> dict[str, Any]:
 
 # Friendly wrappers for sessions and commands
 @app.post('/sessions', response_model=dict[str, str])
-async def create_session(data: InitSessionRequest) -> dict[str, str]:
-    resp = await new_conversation(data)  # type: ignore[arg-type]
+async def create_session(
+    data: InitSessionRequest,
+    user_id: str | None = Depends(get_user_id),
+    provider_tokens: PROVIDER_TOKEN_TYPE = Depends(get_provider_tokens),
+    user_secrets: UserSecrets | None = Depends(get_user_secrets),
+    auth_type: AuthType | None = Depends(get_auth_type),
+) -> dict[str, str]:
+    resp = await new_conversation(
+        data,
+        user_id,  # type: ignore[arg-type]
+        provider_tokens,  # type: ignore[arg-type]
+        user_secrets,  # type: ignore[arg-type]
+        auth_type,  # type: ignore[arg-type]
+    )
     return {'conversation_id': resp.conversation_id}
 
 
