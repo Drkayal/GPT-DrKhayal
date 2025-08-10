@@ -616,6 +616,24 @@ class OpenHands {
     return status === 200;
   }
 
+  static async createBranch(conversationId: string, name: string, from_ref?: string): Promise<boolean> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/branch`;
+    const { status } = await openHands.post(url, { name, from_ref });
+    return status === 200;
+  }
+
+  static async commitChanges(conversationId: string, message: string): Promise<boolean> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/commit`;
+    const { status } = await openHands.post(url, { message });
+    return status === 200;
+  }
+
+  static async createPullRequest(conversationId: string, title: string): Promise<string> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/pr`;
+    const { data } = await openHands.post<{ url: string }>(url, { title });
+    return data.url;
+  }
+
   /**
    * Get the available microagents associated with a conversation
    * @param conversationId The ID of the conversation

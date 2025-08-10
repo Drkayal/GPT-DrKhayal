@@ -4,6 +4,7 @@ import OpenHands from "#/api/open-hands";
 import { FileTree } from "#/components/features/files/file-tree";
 import { EditorPanel } from "#/components/features/files/editor-panel";
 import { BrandButton } from "#/components/features/settings/brand-button";
+import { GitBar } from "#/components/features/git/git-bar";
 
 export default function RepoWorkspaceScreen() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -48,6 +49,8 @@ export default function RepoWorkspaceScreen() {
           {isOpening ? "Opening..." : "Open"}
         </BrandButton>
       </div>
+
+      <GitBar conversationId={conversationId} />
 
       <div className="grid grid-cols-3 gap-4 h-[70vh]">
         <div className="col-span-1 border border-tertiary rounded">
