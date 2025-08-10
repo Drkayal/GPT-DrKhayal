@@ -26,6 +26,7 @@ const MODEL_ALIASES: Record<string, string> = {
   "openai/gpt-4o": "GP-K",
   "anthropic/claude-3-5-sonnet-20241022": "KhayaL-AI",
   "google/gemini-1.5-pro": "YE-21",
+  "openai/gpt-5-2025-08-07": "Khayal-Pro",
 };
 
 function getDisplayName(
