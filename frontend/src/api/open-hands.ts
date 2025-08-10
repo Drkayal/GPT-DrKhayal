@@ -608,6 +608,14 @@ class OpenHands {
     return status === 200;
   }
 
+  static async sendCommand(conversationId: string, command: Record<string, any>): Promise<boolean> {
+    const { status } = await openHands.post(`/api/options/commands`, {
+      conversation_id: conversationId,
+      command,
+    });
+    return status === 200;
+  }
+
   /**
    * Get the available microagents associated with a conversation
    * @param conversationId The ID of the conversation
