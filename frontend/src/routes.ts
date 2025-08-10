@@ -8,6 +8,7 @@ import {
 export default [
   layout("routes/root-layout.tsx", [
     index("routes/home.tsx"),
+    route("connect-github", "routes/connect-github.tsx"),
     route("accept-tos", "routes/accept-tos.tsx"),
     route("settings", "routes/settings.tsx", [
       index("routes/llm-settings.tsx"),
