@@ -565,6 +565,49 @@ class OpenHands {
     return data;
   }
 
+  /** Repo workspace endpoints */
+  static async openRepo(
+    conversationId: string,
+    repository?: string,
+    branch?: string,
+  ): Promise<{ workspace_dir: string } | { error: string }> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/open`;
+    const { data } = await openHands.post(url, { repository, branch });
+    return data;
+  }
+
+  static async getRepoTree(
+    conversationId: string,
+    path?: string,
+  ): Promise<string[]> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/tree`;
+    const { data } = await openHands.get<string[]>(url, {
+      params: { path },
+    });
+    return data;
+  }
+
+  static async readRepoFile(
+    conversationId: string,
+    path: string,
+  ): Promise<{ path: string; content: string }> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/file`;
+    const { data } = await openHands.get<{ path: string; content: string }>(url, {
+      params: { path },
+    });
+    return data;
+  }
+
+  static async writeRepoFile(
+    conversationId: string,
+    path: string,
+    content: string,
+  ): Promise<boolean> {
+    const url = `${this.getConversationUrl(conversationId)}/repos/file`;
+    const { status } = await openHands.put(url, { path, content });
+    return status === 200;
+  }
+
   /**
    * Get the available microagents associated with a conversation
    * @param conversationId The ID of the conversation

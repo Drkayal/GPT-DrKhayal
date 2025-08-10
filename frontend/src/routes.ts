@@ -27,6 +27,7 @@ export default [
       route("served", "routes/served-tab.tsx"),
       route("terminal", "routes/terminal-tab.tsx"),
       route("vscode", "routes/vscode-tab.tsx"),
+      route("workspace", "routes/repo-workspace.tsx"),
     ]),
     route("microagent-management", "routes/microagent-management.tsx"),
   ]),
