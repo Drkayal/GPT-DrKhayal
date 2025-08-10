@@ -622,9 +622,9 @@ class OpenHands {
     return status === 200;
   }
 
-  static async commitChanges(conversationId: string, message: string): Promise<boolean> {
+  static async commitChanges(conversationId: string, message: string, files?: string[]): Promise<boolean> {
     const url = `${this.getConversationUrl(conversationId)}/repos/commit`;
-    const { status } = await openHands.post(url, { message });
+    const { status } = await openHands.post(url, { message, files });
     return status === 200;
   }
 

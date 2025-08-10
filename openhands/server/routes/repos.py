@@ -202,6 +202,7 @@ async def create_branch(
 
 class CommitRequest(BaseModel):
     message: str
+    files: list[str] | None = None
 
 
 @app.post('/commit')
@@ -216,7 +217,12 @@ async def commit_changes(
         if not repo_dir:
             return JSONResponse(status_code=400, content={'error': 'No repository opened'})
         safe_msg = payload.message.replace('"', '\\"')
-        cmd = f'cd {repo_dir} && git add -A && git commit -m "{safe_msg}" || true && git rev-parse HEAD'
+        add_cmd = 'git add -A'
+        if payload.files and len(payload.files) > 0:
+            # escape spaces
+            escaped = ' '.join([f'"{f}"' for f in payload.files])
+            add_cmd = f'git add {escaped}'
+        cmd = f'cd {repo_dir} && {add_cmd} && git commit -m "{safe_msg}" || true && git rev-parse HEAD'
         from openhands.events.action.commands import CmdRunAction
         obs = await call_sync_from_async(runtime.run_action, CmdRunAction(command=cmd))
         sha = None
