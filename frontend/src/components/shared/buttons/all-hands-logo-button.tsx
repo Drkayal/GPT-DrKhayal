@@ -5,7 +5,7 @@ export function AllHandsLogoButton() {
     <TooltipButton tooltip="GP-KhayaL" ariaLabel="GP-KhayaL" navLinkTo="/">
       <div className="flex items-center gap-2">
         <img
-          src="http://ibb.co/ymBxpxwb"
+          src="https://i.ibb.co/7xN0Q0w6/RDn-Sl-NCCfl-I.jpg"
           alt="GP-KhayaL Logo"
           width={34}
           height={34}
