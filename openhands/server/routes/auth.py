@@ -11,13 +11,13 @@ app = APIRouter(prefix='/api', dependencies=get_dependencies())
 
 @app.post('/authenticate')
 async def authenticate(user_id: str | None = Depends(get_user_id)) -> JSONResponse:
-	if user_id:
-		return JSONResponse({'message': 'Authenticated'})
-	return JSONResponse({'error': 'Unauthorized'}, status_code=401)
+    if user_id:
+        return JSONResponse({'message': 'Authenticated'})
+    return JSONResponse({'error': 'Unauthorized'}, status_code=401)
 
 
 @app.post('/logout')
 async def logout() -> JSONResponse:
-	resp = JSONResponse({'message': 'logged out'})
-	resp.delete_cookie(SESSION_COOKIE_NAME, path='/')
-	return resp
+    resp = JSONResponse({'message': 'logged out'})
+    resp.delete_cookie(SESSION_COOKIE_NAME, path='/')
+    return resp
