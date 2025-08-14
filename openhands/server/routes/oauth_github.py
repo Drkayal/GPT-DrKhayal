@@ -60,7 +60,7 @@ async def github_oauth_callback(
     user_id: str | None = Depends(get_user_id),
 ) -> Response:
     client_id = server_config.github_client_id
-    client_secret = os.environ.get('GITHUB_APP_CLIENT_SECRET', '')
+    client_secret = os.environ.get('GITHUB_APP_CLIENT_SECRET') or os.environ.get('GITHUB_SECRET', '')
     if not client_id or not client_secret:
         raise HTTPException(status_code=400, detail='GitHub OAuth not configured')
 
