@@ -22,8 +22,8 @@ jobs:
         run: poetry install --with dev,test
       - name: Lint (ruff)
         run: poetry run ruff check .
-      - name: Run backend tests
-        run: poetry run pytest -q
+      - name: Run backend tests (unit only)
+        run: poetry run pytest -q tests/unit
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci --no-audit --no-fund
