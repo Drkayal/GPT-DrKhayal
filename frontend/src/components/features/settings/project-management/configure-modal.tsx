@@ -56,7 +56,6 @@ interface ConfigureModalProps {
   platform: "jira" | "jira-dc" | "linear";
   integrationData?: {
     id: number;
-    keycloak_user_id: string;
     status: string;
     workspace?: {
       id: number;

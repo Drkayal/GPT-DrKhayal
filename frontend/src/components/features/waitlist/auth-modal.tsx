@@ -6,9 +6,6 @@ import { ModalBackdrop } from "#/components/shared/modals/modal-backdrop";
 import { ModalBody } from "#/components/shared/modals/modal-body";
 import { BrandButton } from "../settings/brand-button";
 import GitHubLogo from "#/assets/branding/github-logo.svg?react";
-import GitLabLogo from "#/assets/branding/gitlab-logo.svg?react";
-import BitbucketLogo from "#/assets/branding/bitbucket-logo.svg?react";
-import { useAuthUrl } from "#/hooks/use-auth-url";
 import { GetConfigResponse } from "#/api/open-hands.types";
 import { Provider } from "#/types/settings";
 
@@ -27,49 +24,12 @@ export function AuthModal({
 }: AuthModalProps) {
   const { t } = useTranslation();
 
-  const gitlabAuthUrl = useAuthUrl({
-    appMode: appMode || null,
-    identityProvider: "gitlab",
-    authUrl,
-  });
-
-  const bitbucketAuthUrl = useAuthUrl({
-    appMode: appMode || null,
-    identityProvider: "bitbucket",
-    authUrl,
-  });
-
-  const enterpriseSsoUrl = useAuthUrl({
-    appMode: appMode || null,
-    identityProvider: "enterprise_sso",
-    authUrl,
-  });
-
   const handleGitHubAuth = () => {
     if (githubAuthUrl) {
       // Always start the OIDC flow, let the backend handle TOS check
       window.location.href = githubAuthUrl;
-    }
-  };
-
-  const handleGitLabAuth = () => {
-    if (gitlabAuthUrl) {
-      // Always start the OIDC flow, let the backend handle TOS check
-      window.location.href = gitlabAuthUrl;
-    }
-  };
-
-  const handleBitbucketAuth = () => {
-    if (bitbucketAuthUrl) {
-      // Always start the OIDC flow, let the backend handle TOS check
-      window.location.href = bitbucketAuthUrl;
-    }
-  };
-
-  const handleEnterpriseSsoAuth = () => {
-    if (enterpriseSsoUrl) {
-      // Always start the OIDC flow, let the backend handle TOS check
-      window.location.href = enterpriseSsoUrl;
+    } else {
+      window.location.href = "/api/auth/github/start";
     }
   };
 
@@ -78,18 +38,6 @@ export function AuthModal({
     providersConfigured &&
     providersConfigured.length > 0 &&
     providersConfigured.includes("github");
-  const showGitlab =
-    providersConfigured &&
-    providersConfigured.length > 0 &&
-    providersConfigured.includes("gitlab");
-  const showBitbucket =
-    providersConfigured &&
-    providersConfigured.length > 0 &&
-    providersConfigured.includes("bitbucket");
-  const showEnterpriseSso =
-    providersConfigured &&
-    providersConfigured.length > 0 &&
-    providersConfigured.includes("enterprise_sso");
 
   // Check if no providers are configured
   const noProvidersConfigured =
@@ -121,41 +69,6 @@ export function AuthModal({
                   startContent={<GitHubLogo width={20} height={20} />}
                 >
                   {t(I18nKey.GITHUB$CONNECT_TO_GITHUB)}
-                </BrandButton>
-              )}
-
-              {showGitlab && (
-                <BrandButton
-                  type="button"
-                  variant="primary"
-                  onClick={handleGitLabAuth}
-                  className="w-full"
-                  startContent={<GitLabLogo width={20} height={20} />}
-                >
-                  {t(I18nKey.GITLAB$CONNECT_TO_GITLAB)}
-                </BrandButton>
-              )}
-
-              {showBitbucket && (
-                <BrandButton
-                  type="button"
-                  variant="primary"
-                  onClick={handleBitbucketAuth}
-                  className="w-full"
-                  startContent={<BitbucketLogo width={20} height={20} />}
-                >
-                  {t(I18nKey.BITBUCKET$CONNECT_TO_BITBUCKET)}
-                </BrandButton>
-              )}
-
-              {showEnterpriseSso && (
-                <BrandButton
-                  type="button"
-                  variant="primary"
-                  onClick={handleEnterpriseSsoAuth}
-                  className="w-full"
-                >
-                  {t(I18nKey.ENTERPRISE_SSO$CONNECT_TO_ENTERPRISE_SSO)}
                 </BrandButton>
               )}
             </>
