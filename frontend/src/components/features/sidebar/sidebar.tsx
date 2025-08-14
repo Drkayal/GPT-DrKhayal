@@ -1,5 +1,6 @@
 import React from "react";
 import { useLocation, NavLink } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useGitUser } from "#/hooks/query/use-git-user";
 import { UserActions } from "./user-actions";
 import { AllHandsLogoButton } from "#/components/shared/buttons/all-hands-logo-button";
@@ -17,6 +18,7 @@ import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { MicroagentManagementButton } from "#/components/shared/buttons/microagent-management-button";
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const location = useLocation();
   const user = useGitUser();
   const { data: config } = useConfig();
@@ -82,8 +84,7 @@ export function Sidebar() {
                 }`
               }
             >
-              {/* eslint-disable-next-line i18next/no-literal-string */}
-              <span>Chat</span>
+              <span>{t("NAV$CHAT", { defaultValue: "Chat" })}</span>
             </NavLink>
             <ConversationPanelButton
               isOpen={conversationPanelIsOpen}
