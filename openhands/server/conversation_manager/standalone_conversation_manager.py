@@ -296,6 +296,8 @@ class StandaloneConversationManager(ConversationManager):
         replay_json: str | None = None,
     ) -> Session:
         logger.info(f'starting_agent_loop:{sid}', extra={'session_id': sid})
+        # Local import to ensure test patches on Session are effective even if module import order varies
+        from openhands.server.session.session import Session  # noqa: WPS433
 
         response_ids = await self.get_running_agent_loops(user_id)
         if len(response_ids) >= self.config.max_concurrent_conversations:

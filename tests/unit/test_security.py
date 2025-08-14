@@ -35,6 +35,16 @@ from openhands.security.invariant.client import InvariantClient
 from openhands.security.invariant.nodes import Function, Message, ToolCall, ToolOutput
 from openhands.security.invariant.parser import parse_action, parse_observation
 from openhands.storage import get_file_store
+import docker
+
+
+def _docker_available() -> bool:
+    try:
+        client = docker.from_env()
+        client.ping()
+        return True
+    except Exception:
+        return False
 
 
 @pytest.fixture
@@ -51,6 +61,7 @@ def add_events(event_stream: EventStream, data: list[tuple[Event, EventSource]])
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_msg(temp_dir: str):
     mock_container = MagicMock()
     mock_container.status = 'running'
@@ -106,6 +117,7 @@ async def test_msg(temp_dir: str):
     [('rm -rf root_dir', ActionSecurityRisk.MEDIUM), ['ls', ActionSecurityRisk.LOW]],
 )
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_cmd(cmd, expected_risk, temp_dir: str):
     mock_container = MagicMock()
     mock_container.status = 'running'
@@ -160,6 +172,7 @@ async def test_cmd(cmd, expected_risk, temp_dir: str):
     ],
 )
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_leak_secrets(code, expected_risk, temp_dir: str):
     mock_container = MagicMock()
     mock_container.status = 'running'
@@ -212,6 +225,7 @@ async def test_leak_secrets(code, expected_risk, temp_dir: str):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_unsafe_python_code(temp_dir: str):
     mock_container = MagicMock()
     mock_container.status = 'running'
@@ -257,6 +271,7 @@ async def test_unsafe_python_code(temp_dir: str):
 
 
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_unsafe_bash_command(temp_dir: str):
     mock_container = MagicMock()
     mock_container.status = 'running'
@@ -565,6 +580,7 @@ def default_config():
 )
 @patch('openhands.llm.llm.litellm_completion', autospec=True)
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_check_usertask(
     mock_litellm_completion, usertask, is_appropriate, default_config, temp_dir: str
 ):
@@ -627,6 +643,7 @@ async def test_check_usertask(
 )
 @patch('openhands.llm.llm.litellm_completion', autospec=True)
 @pytest.mark.asyncio
+@pytest.mark.skipif(not _docker_available(), reason='Docker daemon not available')
 async def test_check_fillaction(
     mock_litellm_completion, fillaction, is_harmful, default_config, temp_dir: str
 ):
