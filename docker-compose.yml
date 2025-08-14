@@ -15,6 +15,8 @@ services:
       - FRONTEND_REDIRECT_URL=${FRONTEND_REDIRECT_URL:-https://gp-khayal.top}
       - OPENHANDS_CONFIG_CLS=${OPENHANDS_CONFIG_CLS:-openhands.server.config.server_config.CursorLikeServerConfig}
       - JWT_SECRET=${JWT_SECRET}
+      - OPENHANDS_CONVERSATION_VALIDATOR_CLS=${OPENHANDS_CONVERSATION_VALIDATOR_CLS:-openhands.storage.conversation.conversation_validator.CookieConversationValidator}
+      - SECRETS_ENC_KEY=${SECRETS_ENC_KEY}
     ports:
       - "3000:3000"
     extra_hosts:

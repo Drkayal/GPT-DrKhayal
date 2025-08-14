@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 import urllib.parse
 from typing import Any
 
@@ -24,6 +25,8 @@ from openhands.server.user_auth.github_cookie_auth import (
 from openhands.storage import get_file_store
 from openhands.storage.secrets.file_secrets_store import FileSecretsStore
 
+STATE_COOKIE_NAME = "oh_oauth_state"
+
 
 app = APIRouter(prefix='/api/auth/github', dependencies=get_dependencies())
 
@@ -33,7 +36,7 @@ class OAuthStartResponse(BaseModel):
 
 
 @app.get('/start', response_model=OAuthStartResponse)
-async def github_oauth_start(request: Request) -> OAuthStartResponse:
+async def github_oauth_start(request: Request, response: Response) -> OAuthStartResponse:
     client_id = server_config.github_client_id
     if not client_id:
         raise HTTPException(status_code=400, detail='GITHUB_APP_CLIENT_ID not set')
@@ -42,11 +45,24 @@ async def github_oauth_start(request: Request) -> OAuthStartResponse:
     base = str(request.base_url).rstrip('/')
     redirect_uri = f"{base}/api/auth/github/callback"
 
+    # Generate CSRF state and set short-lived, secure cookie
+    state = secrets.token_urlsafe(32)
+    response.set_cookie(
+        key=STATE_COOKIE_NAME,
+        value=state,
+        max_age=600,  # 10 minutes
+        httponly=True,
+        secure=True,
+        samesite='lax',
+        path='/api/auth/github',
+    )
+
     params = {
         'client_id': client_id,
         'redirect_uri': redirect_uri,
         'scope': 'repo read:user user:email',
         'allow_signup': 'false',
+        'state': state,
     }
     url = 'https://github.com/login/oauth/authorize?' + urllib.parse.urlencode(params)
     return OAuthStartResponse(auth_url=url)
@@ -59,6 +75,11 @@ async def github_oauth_callback(
     state: str | None = None,
     user_id: str | None = Depends(get_user_id),
 ) -> Response:
+    # Validate CSRF state
+    cookie_state = request.cookies.get(STATE_COOKIE_NAME)
+    if not state or not cookie_state or state != cookie_state:
+        raise HTTPException(status_code=400, detail='Invalid OAuth state')
+
     client_id = server_config.github_client_id
     client_secret = os.environ.get('GITHUB_APP_CLIENT_SECRET') or os.environ.get('GITHUB_SECRET', '')
     if not client_id or not client_secret:
@@ -151,6 +172,9 @@ async def github_oauth_callback(
         samesite='lax',
         path='/',
     )
+
+    # Clear OAuth state cookie after validation
+    response.delete_cookie(STATE_COOKIE_NAME, path='/api/auth/github')
 
     return response
 

@@ -58,6 +58,7 @@ class CursorLikeServerConfig(ServerConfig):
     user_auth_class: str = (
         'openhands.server.user_auth.github_cookie_auth.GithubCookieUserAuth'
     )
+    app_mode = AppMode.SAAS
 
 
 def load_server_config() -> ServerConfig:

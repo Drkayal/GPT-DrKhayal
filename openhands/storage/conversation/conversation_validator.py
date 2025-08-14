@@ -1,4 +1,7 @@
 import os
+from http.cookies import SimpleCookie
+from typing import Optional
+import jwt
 from datetime import datetime, timezone
 
 from openhands.core.config.utils import load_openhands_config
@@ -79,3 +82,66 @@ def create_conversation_validator() -> ConversationValidator:
         ConversationValidator, conversation_validator_cls
     )
     return ConversationValidatorImpl()
+
+
+class CookieConversationValidator(ConversationValidator):
+    """Validate conversation access using JWT from the oh_session cookie.
+
+    - Parses the incoming cookies string to find `oh_session`
+    - Verifies the JWT signature using the configured jwt_secret
+    - Extracts the subject (sub) as the authenticated user id
+    - Ensures the conversation metadata's user_id matches the authenticated user
+    """
+
+    SESSION_COOKIE_NAME: str = "oh_session"
+    JWT_ALG: str = "HS256"
+
+    def _parse_cookie(self, cookies_str: str) -> Optional[str]:
+        if not cookies_str:
+            return None
+        try:
+            c = SimpleCookie()
+            c.load(cookies_str)
+            morsel = c.get(self.SESSION_COOKIE_NAME)
+            return morsel.value if morsel else None
+        except Exception:
+            return None
+
+    def _decode_sub(self, token: str | None) -> Optional[str]:
+        if not token:
+            return None
+        cfg = load_openhands_config()
+        secret = cfg.jwt_secret.get_secret_value() if cfg.jwt_secret else None
+        if not secret:
+            return None
+        try:
+            claims = jwt.decode(token, secret, algorithms=[self.JWT_ALG])
+            sub = claims.get("sub")
+            return str(sub) if sub is not None else None
+        except Exception:
+            return None
+
+    async def validate(
+        self,
+        conversation_id: str,
+        cookies_str: str,
+        authorization_header: str | None = None,
+    ) -> str | None:
+        # Extract user id from cookie JWT
+        token = self._parse_cookie(cookies_str)
+        user_id = self._decode_sub(token)
+
+        # Load conversation metadata (ensure it exists)
+        metadata = await self._ensure_metadata_exists(conversation_id, user_id)
+
+        # If the conversation has an owner, enforce ownership
+        if metadata.user_id is not None and user_id != metadata.user_id:
+            # Deny access by raising ConnectionRefusedError so the caller can disconnect
+            try:
+                from socketio.exceptions import ConnectionRefusedError  # local import to avoid hard dep
+            except Exception:  # pragma: no cover
+                raise
+            raise ConnectionRefusedError('permission_denied')
+
+        # If metadata has no owner, allow (for legacy conversations) but return resolved user_id (may be None)
+        return user_id

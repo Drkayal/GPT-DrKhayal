@@ -2,7 +2,6 @@ import { AxiosHeaders } from "axios";
 import {
   Feedback,
   FeedbackResponse,
-  GitHubAccessTokenResponse,
   GetConfigResponse,
   GetVSCodeUrlResponse,
   AuthenticateResponse,
@@ -241,22 +240,6 @@ class OpenHands {
       headers: this.getConversationHeaders(),
     });
     return Object.keys(response.data.hosts);
-  }
-
-  /**
-   * @param code Code provided by GitHub
-   * @returns GitHub access token
-   */
-  static async getGitHubAccessToken(
-    code: string,
-  ): Promise<GitHubAccessTokenResponse> {
-    const { data } = await openHands.post<GitHubAccessTokenResponse>(
-      "/api/keycloak/callback",
-      {
-        code,
-      },
-    );
-    return data;
   }
 
   /**
