@@ -91,11 +91,19 @@ export default function RootLayout() {
     const isFetchingSettings = settings.isFetching;
     const isFetchingBalance = balance.isFetching;
     return (
-      isNavigating || isFetchingAuth || isFetchingSettings || isFetchingBalance || config.isLoading
+      isNavigating ||
+      isFetchingAuth ||
+      isFetchingSettings ||
+      isFetchingBalance ||
+      config.isLoading
     );
   }, [isNavigating, settings.isFetching, balance.isFetching, config.isLoading]);
 
-  const loaderMessage = isNavigating ? "Loading..." : (settings.isFetching ? "Loading settings..." : undefined);
+  const loaderMessage = isNavigating
+    ? "Loading..."
+    : settings.isFetching
+      ? "Loading settings..."
+      : undefined;
 
   return (
     <div className="h-full w-full">

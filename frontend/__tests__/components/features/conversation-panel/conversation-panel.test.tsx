@@ -205,7 +205,9 @@ describe("ConversationPanel", () => {
       const index = mockData.findIndex((conv) => conv.conversation_id === id);
       if (index !== -1) {
         mockData.splice(index, 1);
+        return true;
       }
+      return false;
     });
 
     renderConversationPanel();

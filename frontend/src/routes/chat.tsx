@@ -10,7 +10,9 @@ export default function ChatRoute() {
   const { data: settings, isFetching } = useSettings();
 
   const [prompt, setPrompt] = React.useState("");
-  const [messages, setMessages] = React.useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = React.useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
   const [isSending, setIsSending] = React.useState(false);
 
   const sendMessage = async () => {
@@ -22,14 +24,17 @@ export default function ChatRoute() {
     try {
       await streamChat(
         [{ role: "user", content: userMsg.content }],
-        settings?.llm_model,
+        settings?.LLM_MODEL,
         (token) => {
           setMessages((prev) => {
             const copy = [...prev];
             // append to last assistant message
             const lastIdx = copy.length - 1;
             if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
-              copy[lastIdx] = { ...copy[lastIdx], content: copy[lastIdx].content + token };
+              copy[lastIdx] = {
+                ...copy[lastIdx],
+                content: copy[lastIdx].content + token,
+              };
             }
             return copy;
           });
@@ -93,7 +98,10 @@ export default function ChatRoute() {
         </div>
       ) : (
         <div className="text-[#9099AC] text-sm">
-          Model: <span className="text-white">{settings?.LLM?.MODEL || settings?.llm_model || "(not set)"}</span>
+          Model:{" "}
+          <span className="text-white">
+            {settings?.LLM_MODEL || "(not set)"}
+          </span>
         </div>
       )}
 
@@ -101,7 +109,10 @@ export default function ChatRoute() {
         <div className="col-span-2 card-glow-accent p-4 h-[60vh] flex flex-col">
           <div className="flex-1 overflow-auto flex flex-col gap-3 pr-1">
             {messages.map((m, idx) => (
-              <div key={idx} className={m.role === "user" ? "text-white" : "text-glow"}>
+              <div
+                key={idx}
+                className={m.role === "user" ? "text-white" : "text-glow"}
+              >
                 <span className="text-xs opacity-70 mr-2">{m.role}</span>
                 {m.content}
               </div>
@@ -112,7 +123,7 @@ export default function ChatRoute() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder={"Ask anything..."}
+              placeholder="Ask anything..."
               className="flex-1 bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
             />
             <BrandButton
@@ -133,7 +144,7 @@ export default function ChatRoute() {
             <input
               value={imagePrompt}
               onChange={(e) => setImagePrompt(e.target.value)}
-              placeholder={"Describe your image..."}
+              placeholder="Describe your image..."
               className="w-full bg-tertiary border border-[#717888] rounded-sm p-2 text-white mb-2"
             />
             <BrandButton
@@ -147,7 +158,11 @@ export default function ChatRoute() {
             </BrandButton>
             {imageUrl && (
               <div className="mt-3">
-                <img src={imageUrl} alt="generated" className="max-w-full rounded-sm border border-[#717888]" />
+                <img
+                  src={imageUrl}
+                  alt="generated"
+                  className="max-w-full rounded-sm border border-[#717888]"
+                />
               </div>
             )}
           </div>
@@ -157,7 +172,7 @@ export default function ChatRoute() {
             <input
               value={videoPrompt}
               onChange={(e) => setVideoPrompt(e.target.value)}
-              placeholder={"Describe your video..."}
+              placeholder="Describe your video..."
               className="w-full bg-tertiary border border-[#717888] rounded-sm p-2 text-white mb-2"
             />
             <BrandButton
@@ -171,7 +186,12 @@ export default function ChatRoute() {
             </BrandButton>
             {videoUrl && (
               <div className="mt-3 text-[#9099AC] text-sm break-all">
-                <a href={videoUrl} target="_blank" rel="noreferrer" className="text-accent underline">
+                <a
+                  href={videoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent underline"
+                >
                   Download Video
                 </a>
               </div>

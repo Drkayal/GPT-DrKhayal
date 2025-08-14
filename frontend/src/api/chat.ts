@@ -1,4 +1,8 @@
-export async function streamChat(messages: { role: string; content: string }[], model?: string, onToken?: (t: string) => void): Promise<void> {
+export async function streamChat(
+  messages: { role: string; content: string }[],
+  model?: string,
+  onToken?: (t: string) => void,
+): Promise<void> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -50,5 +54,5 @@ export async function startVideoJob(prompt: string): Promise<string> {
 
 export async function getJob(jobId: string): Promise<any> {
   const res = await fetch(`/api/jobs/${jobId}`);
-  return await res.json();
+  return res.json();
 }

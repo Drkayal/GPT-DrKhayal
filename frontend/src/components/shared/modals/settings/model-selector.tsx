@@ -53,7 +53,7 @@ export function ModelSelector({
   const [selectedModel, setSelectedModel] = React.useState<string | null>(null);
 
   // Get the appropriate verified models array based on the selected provider
-  const getVerifiedModels = () => {
+  const getVerifiedModels = (): string[] => {
     if (selectedProvider === "openhands") {
       return VERIFIED_OPENHANDS_MODELS;
     }
