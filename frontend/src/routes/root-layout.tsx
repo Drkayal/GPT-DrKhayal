@@ -55,12 +55,15 @@ export default function RootLayout() {
   const settings = useSettings();
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (navigation.state !== "idle") {
       setIsNavigating(true);
     } else {
-      const id = setTimeout(() => setIsNavigating(false), 150);
-      return () => clearTimeout(id);
+      timeoutId = setTimeout(() => setIsNavigating(false), 150);
     }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [navigation.state, location.pathname]);
 
   // Prefetch heavy route chunks optimistically

@@ -47,7 +47,6 @@ export default function ChatRoute() {
 
   const [imagePrompt, setImagePrompt] = React.useState("");
   const [videoPrompt, setVideoPrompt] = React.useState("");
-  const [jobStatus, setJobStatus] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
 
@@ -58,61 +57,50 @@ export default function ChatRoute() {
       const j = await getJob(jobId);
       if (j.status === "COMPLETED") return j.result;
       if (j.status === "FAILED") throw new Error(j.error || "Job failed");
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((r) => setTimeout(r, 800));
+      // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+      await new Promise<void>((resolve) => setTimeout(resolve, 800));
     }
   };
 
   const generateImage = async () => {
     if (!imagePrompt.trim()) return;
-    // eslint-disable-next-line i18next/no-literal-string
-    setJobStatus("Creating image...");
     setImageUrl(null);
     try {
       const jobId = await startImageJob(imagePrompt);
       const result = await pollJob(jobId);
       setImageUrl(result?.path || null);
-      // eslint-disable-next-line i18next/no-literal-string
-      setJobStatus("Image ready");
     } catch (e) {
-      // eslint-disable-next-line i18next/no-literal-string
-      setJobStatus("Image generation failed");
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   };
 
   const generateVideo = async () => {
     if (!videoPrompt.trim()) return;
-    // eslint-disable-next-line i18next/no-literal-string
-    setJobStatus("Creating video...");
     setVideoUrl(null);
     try {
       const jobId = await startVideoJob(videoPrompt);
       const result = await pollJob(jobId);
       setVideoUrl(result?.path || null);
-      // eslint-disable-next-line i18next/no-literal-string
-      setJobStatus("Video ready");
     } catch (e) {
-      // eslint-disable-next-line i18next/no-literal-string
-      setJobStatus("Video generation failed");
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   };
 
   return (
     <div className="flex flex-col gap-6 p-6 w-full h-full overflow-auto">
-      {/* eslint-disable-next-line i18next/no-literal-string */}
-      <h1 className="text-2xl font-semibold text-white">General AI Chat</h1>
+      <h1 className="text-2xl font-semibold text-white">{t("CHAT$TITLE")}</h1>
 
       {isFetching ? (
         <div className="flex items-center gap-2 text-[#9099AC]">
           <LoadingSpinner size="small" /> {t("LOADING$SETTINGS")}
         </div>
       ) : (
-        // eslint-disable-next-line i18next/no-literal-string
         <div className="text-[#9099AC] text-sm">
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          Model:{" "}
+          {t("CHAT$MODEL_LABEL")}{" "}
           <span className="text-white">
-            {settings?.LLM_MODEL || "(not set)"}
+            {settings?.LLM_MODEL || t("CHAT$MODEL_NOT_SET")}
           </span>
         </div>
       )}
@@ -135,7 +123,7 @@ export default function ChatRoute() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask anything..."
+              placeholder={t("CHAT$ASK_ANYTHING")}
               className="flex-1 bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
             />
             <BrandButton
@@ -151,33 +139,32 @@ export default function ChatRoute() {
         </div>
 
         <div className="col-span-1 flex flex-col gap-4">
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          <h2 className="text-white font-medium mb-2">Generate Image</h2>
-          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h2 className="text-white font-medium mb-2">
+            {t("CHAT$GENERATE_IMAGE")}
+          </h2>
           <input
             value={imagePrompt}
             onChange={(e) => setImagePrompt(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && generateImage()}
-            placeholder={"Describe the image..."}
+            placeholder={t("CHAT$DESCRIBE_IMAGE")}
             className="bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
           />
           {imageUrl && (
-            // eslint-disable-next-line i18next/no-literal-string
             <img
               src={imageUrl}
-              alt="generated"
+              alt={t("CHAT$GENERATED_IMAGE_ALT")}
               className="max-w-full rounded-sm border border-[#717888]"
             />
           )}
 
-          {/* eslint-disable-next-line i18next/no-literal-string */}
-          <h2 className="text-white font-medium mb-2">Generate Video</h2>
-          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h2 className="text-white font-medium mb-2">
+            {t("CHAT$GENERATE_VIDEO")}
+          </h2>
           <input
             value={videoPrompt}
             onChange={(e) => setVideoPrompt(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && generateVideo()}
-            placeholder={"Describe the video..."}
+            placeholder={t("CHAT$DESCRIBE_VIDEO")}
             className="bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
           />
           {videoUrl && (
@@ -187,8 +174,7 @@ export default function ChatRoute() {
               rel="noreferrer"
               className="text-accent underline"
             >
-              {/* eslint-disable-next-line i18next/no-literal-string */}
-              Download Video
+              {t("CHAT$DOWNLOAD_VIDEO")}
             </a>
           )}
         </div>
