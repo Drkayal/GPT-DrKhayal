@@ -19,7 +19,7 @@ jobs:
       - name: Install Poetry
         run: pip install poetry==2.1.2
       - name: Install backend deps
-        run: poetry install
+        run: poetry install --with dev,test
       - name: Lint (ruff)
         run: poetry run ruff check .
       - name: Run backend tests
