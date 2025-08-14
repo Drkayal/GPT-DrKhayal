@@ -12254,5 +12254,49 @@
         "tr": "Mikro ajan içeriği yüklenirken hata oluştu.",
         "de": "Fehler beim Laden des Microagent-Inhalts.",
         "uk": "Помилка під час завантаження вмісту мікроагента."
+    },
+    "NAV$CHAT": {
+        "en": "Chat",
+        "ar": "الدردشة"
+    },
+    "CHAT$TITLE": {
+        "en": "General AI Chat",
+        "ar": "دردشة الذكاء الاصطناعي العامة"
+    },
+    "CHAT$MODEL_LABEL": {
+        "en": "Model:",
+        "ar": "النموذج:"
+    },
+    "CHAT$MODEL_NOT_SET": {
+        "en": "(not set)",
+        "ar": "(غير محدد)"
+    },
+    "CHAT$ASK_ANYTHING": {
+        "en": "Ask anything...",
+        "ar": "اسأل أي شيء..."
+    },
+    "CHAT$GENERATE_IMAGE": {
+        "en": "Generate Image",
+        "ar": "توليد صورة"
+    },
+    "CHAT$GENERATE_VIDEO": {
+        "en": "Generate Video",
+        "ar": "توليد فيديو"
+    },
+    "CHAT$DESCRIBE_IMAGE": {
+        "en": "Describe the image...",
+        "ar": "صف الصورة..."
+    },
+    "CHAT$DESCRIBE_VIDEO": {
+        "en": "Describe the video...",
+        "ar": "صف الفيديو..."
+    },
+    "CHAT$GENERATED_IMAGE_ALT": {
+        "en": "generated",
+        "ar": "مولدة"
+    },
+    "CHAT$DOWNLOAD_VIDEO": {
+        "en": "Download Video",
+        "ar": "تحميل الفيديو"
     }
 }
