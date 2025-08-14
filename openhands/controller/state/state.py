@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import os
-import pickle
+import cloudpickle as pickle
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any

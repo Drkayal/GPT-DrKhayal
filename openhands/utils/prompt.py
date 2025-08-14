@@ -4,7 +4,6 @@ from itertools import islice
 
 from jinja2 import Template
 
-from openhands.agenthub.codeact_agent.tools.bash import refine_prompt
 from openhands.controller.state.state import State
 from openhands.core.message import Message, TextContent
 from openhands.events.observation.agent import MicroagentKnowledge
@@ -91,6 +90,8 @@ class PromptManager:
 
     def get_system_message(self) -> str:
         system_message = self.system_template.render().strip()
+        # Lazy import to avoid circular dependencies during test collection
+        from openhands.agenthub.codeact_agent.tools.bash import refine_prompt
         return refine_prompt(system_message)
 
     def get_example_user_message(self) -> str:

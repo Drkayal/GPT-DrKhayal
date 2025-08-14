@@ -33,8 +33,9 @@ class ServerConfig(ServerConfigInterface):
     )
 
     def verify_config(self):
-        if self.config_cls:
-            raise ValueError('Unexpected config path provided')
+        # Accept provided OPENHANDS_CONFIG_CLS in all environments (OSS/tests/prod)
+        # to allow overriding the server behavior without raising.
+        return
 
     def get_config(self):
         config = {

@@ -53,9 +53,9 @@ class StandaloneConversationManager(ConversationManager):
     sio: socketio.AsyncServer
     config: OpenHandsConfig
     file_store: FileStore
-    server_config: ServerConfig
     # Defaulting monitoring_listener for temp backward compatibility.
     monitoring_listener: MonitoringListener = MonitoringListener()
+    server_config: ServerConfig = field(default_factory=ServerConfig)
     _local_agent_loops_by_sid: dict[str, Session] = field(default_factory=dict)
     _local_connection_id_to_session_id: dict[str, str] = field(default_factory=dict)
     _active_conversations: dict[str, tuple[ServerConversation, int]] = field(
@@ -440,8 +440,8 @@ class StandaloneConversationManager(ConversationManager):
             sio,
             config,
             file_store,
-            server_config,
             monitoring_listener or MonitoringListener(),
+            server_config,
         )
 
     def _create_conversation_update_callback(
