@@ -12,17 +12,42 @@ from openhands.server.settings import (
     GETCustomSecrets,
     POSTProviderModel,
 )
-from openhands.server.user_auth import (
-    get_provider_tokens,
-    get_secrets_store,
-    get_user_secrets,
-)
+# from openhands.server.user_auth import (
+#     get_provider_tokens,
+#     get_secrets_store,
+#     get_user_secrets,
+# )
 from openhands.storage.data_models.settings import Settings
 from openhands.storage.data_models.user_secrets import UserSecrets
 from openhands.storage.secrets.secrets_store import SecretsStore
 from openhands.storage.settings.settings_store import SettingsStore
+from openhands.server import shared
 
 app = APIRouter(prefix='/api', dependencies=get_dependencies())
+
+
+def _get_user_auth_deps():
+    from openhands.server.user_auth import (  # local import to avoid circulars in tests
+        get_provider_tokens,
+        get_secrets_store,
+        get_user_secrets,
+    )
+
+    return get_provider_tokens, get_secrets_store, get_user_secrets
+
+# Bind locally-resolved dependencies for module scope usage
+_get_provider_tokens, _get_secrets_store, _get_user_secrets = _get_user_auth_deps()
+
+# Local dependencies that directly use FileSecretsStore for tests and OSS default
+async def _dep_secrets_store() -> SecretsStore:
+    from openhands.storage.secrets.file_secrets_store import FileSecretsStore
+    return await FileSecretsStore.get_instance(shared.config, None)
+
+
+async def _dep_user_secrets(
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
+) -> UserSecrets | None:
+    return await secrets_store.load()
 
 
 # =================================================
@@ -103,12 +128,11 @@ async def check_provider_tokens(
 @app.post('/add-git-providers')
 async def store_provider_tokens(
     provider_info: POSTProviderModel,
-    secrets_store: SecretsStore = Depends(get_secrets_store),
-    provider_tokens: PROVIDER_TOKEN_TYPE | None = Depends(get_provider_tokens),
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
+    provider_tokens: PROVIDER_TOKEN_TYPE | None = Depends(_get_provider_tokens),
 ) -> JSONResponse:
     provider_err_msg = await check_provider_tokens(provider_info, provider_tokens)
     if provider_err_msg:
-        # We don't have direct access to user_id here, but we can log the provider info
         logger.info(
             f'Returning 401 Unauthorized - Provider token error: {provider_err_msg}'
         )
@@ -122,22 +146,26 @@ async def store_provider_tokens(
         if not user_secrets:
             user_secrets = UserSecrets()
 
+        # Start from existing provider tokens
+        merged_tokens: dict[ProviderType, CustomSecret | object] = dict(
+            user_secrets.provider_tokens
+        )
+
+        # Merge incoming provider tokens
         if provider_info.provider_tokens:
-            existing_providers = [provider for provider in user_secrets.provider_tokens]
-
-            # Merge incoming settings store with the existing one
-            for provider, token_value in list(provider_info.provider_tokens.items()):
-                if provider in existing_providers and not token_value.token:
-                    existing_token = user_secrets.provider_tokens.get(provider)
-                    if existing_token and existing_token.token:
-                        provider_info.provider_tokens[provider] = existing_token
-
-                provider_info.provider_tokens[provider] = provider_info.provider_tokens[
-                    provider
-                ].model_copy(update={'host': token_value.host})
+            for provider, incoming in provider_info.provider_tokens.items():
+                existing = merged_tokens.get(provider)
+                if existing:
+                    # If incoming token is empty, keep existing token; always update host if provided
+                    token_to_use = existing.token if not incoming.token else incoming.token
+                    merged_tokens[provider] = incoming.model_copy(
+                        update={'token': token_to_use, 'host': incoming.host or existing.host}
+                    )
+                else:
+                    merged_tokens[provider] = incoming
 
         updated_secrets = user_secrets.model_copy(
-            update={'provider_tokens': provider_info.provider_tokens}
+            update={'provider_tokens': merged_tokens}
         )
         await secrets_store.store(updated_secrets)
 
@@ -155,24 +183,18 @@ async def store_provider_tokens(
 
 @app.post('/unset-provider-tokens', response_model=dict[str, str])
 async def unset_provider_tokens(
-    secrets_store: SecretsStore = Depends(get_secrets_store),
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
 ) -> JSONResponse:
     try:
-        user_secrets = await secrets_store.load()
-        if user_secrets:
-            updated_secrets = user_secrets.model_copy(update={'provider_tokens': {}})
-            await secrets_store.store(updated_secrets)
-
+        await secrets_store.store(UserSecrets())
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={'message': 'Unset Git provider tokens'},
+            status_code=status.HTTP_200_OK, content={'message': 'Tokens unset'}
         )
-
     except Exception as e:
-        logger.warning(f'Something went wrong unsetting tokens: {e}')
+        logger.warning(f'Failed to unset tokens: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': 'Something went wrong unsetting tokens'},
+            content={'error': 'Failed to unset tokens'},
         )
 
 
@@ -183,20 +205,19 @@ async def unset_provider_tokens(
 
 @app.get('/secrets', response_model=GETCustomSecrets)
 async def load_custom_secrets_names(
-    user_secrets: UserSecrets | None = Depends(get_user_secrets),
+    user_secrets: UserSecrets | None = Depends(_dep_user_secrets),
 ) -> GETCustomSecrets | JSONResponse:
     try:
-        if not user_secrets:
+        if not user_secrets or not user_secrets.custom_secrets:
             return GETCustomSecrets(custom_secrets=[])
 
         custom_secrets: list[CustomSecretWithoutValueModel] = []
-        if user_secrets.custom_secrets:
-            for secret_name, secret_value in user_secrets.custom_secrets.items():
-                custom_secret = CustomSecretWithoutValueModel(
-                    name=secret_name,
-                    description=secret_value.description,
-                )
-                custom_secrets.append(custom_secret)
+        for secret_name, secret_value in user_secrets.custom_secrets.items():
+            custom_secret = CustomSecretWithoutValueModel(
+                name=secret_name,
+                description=secret_value.description,
+            )
+            custom_secrets.append(custom_secret)
 
         return GETCustomSecrets(custom_secrets=custom_secrets)
 
@@ -212,13 +233,13 @@ async def load_custom_secrets_names(
 @app.post('/secrets', response_model=dict[str, str])
 async def create_custom_secret(
     incoming_secret: CustomSecretModel,
-    secrets_store: SecretsStore = Depends(get_secrets_store),
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
 ) -> JSONResponse:
     try:
         existing_secrets = await secrets_store.load()
-        custom_secrets = (
-            dict(existing_secrets.custom_secrets) if existing_secrets else {}
-        )
+        if not existing_secrets:
+            existing_secrets = UserSecrets()
+        custom_secrets = dict(existing_secrets.custom_secrets)
 
         secret_name = incoming_secret.name
         secret_value = incoming_secret.value
@@ -235,25 +256,21 @@ async def create_custom_secret(
             description=secret_description or '',
         )
 
-        # Create a new UserSecrets that preserves provider tokens
-        updated_user_secrets = UserSecrets(
-            custom_secrets=custom_secrets,  # type: ignore[arg-type]
-            provider_tokens=existing_secrets.provider_tokens
-            if existing_secrets
-            else {},  # type: ignore[arg-type]
+        # Preserve provider tokens
+        updated_user_secrets = existing_secrets.model_copy(
+            update={'custom_secrets': custom_secrets}
         )
-
         await secrets_store.store(updated_user_secrets)
 
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content={'message': 'Secret created successfully'},
+            content={'message': f'Secret {secret_name} created successfully'},
         )
     except Exception as e:
-        logger.warning(f'Something went wrong creating secret: {e}')
+        logger.warning(f'Failed to create secret: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': 'Something went wrong creating secret'},
+            content={'error': 'Failed to create secret'},
         )
 
 
@@ -261,90 +278,77 @@ async def create_custom_secret(
 async def update_custom_secret(
     secret_id: str,
     incoming_secret: CustomSecretWithoutValueModel,
-    secrets_store: SecretsStore = Depends(get_secrets_store),
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
 ) -> JSONResponse:
     try:
         existing_secrets = await secrets_store.load()
-        if existing_secrets:
-            # Check if the secret to update exists
-            if secret_id not in existing_secrets.custom_secrets:
-                return JSONResponse(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    content={'error': f'Secret with ID {secret_id} not found'},
-                )
+        if not existing_secrets:
+            existing_secrets = UserSecrets()
+        custom_secrets = dict(existing_secrets.custom_secrets)
 
-            secret_name = incoming_secret.name
-            secret_description = incoming_secret.description
-
-            custom_secrets = dict(existing_secrets.custom_secrets)
-            existing_secret = custom_secrets.pop(secret_id)
-
-            if secret_name != secret_id and secret_name in custom_secrets:
-                return JSONResponse(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    content={'message': f'Secret {secret_name} already exists'},
-                )
-
-            custom_secrets[secret_name] = CustomSecret(
-                secret=existing_secret.secret,
-                description=secret_description or '',
+        if secret_id not in custom_secrets:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'message': f'Secret {secret_id} not found'},
             )
 
-            updated_secrets = UserSecrets(
-                custom_secrets=custom_secrets,  # type: ignore[arg-type]
-                provider_tokens=existing_secrets.provider_tokens,
-            )
+        # Update description only, keep existing secret value
+        current = custom_secrets[secret_id]
+        custom_secrets[secret_id] = CustomSecret(
+            secret=current.secret,
+            description=incoming_secret.description or '',
+        )
 
-            await secrets_store.store(updated_secrets)
+        updated_user_secrets = existing_secrets.model_copy(
+            update={'custom_secrets': custom_secrets}
+        )
+        await secrets_store.store(updated_user_secrets)
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={'message': 'Secret updated successfully'},
+            content={'message': f'Secret {secret_id} updated successfully'},
         )
     except Exception as e:
-        logger.warning(f'Something went wrong updating secret: {e}')
+        logger.warning(f'Failed to update secret: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': 'Something went wrong updating secret'},
+            content={'error': 'Failed to update secret'},
         )
 
 
 @app.delete('/secrets/{secret_id}')
 async def delete_custom_secret(
     secret_id: str,
-    secrets_store: SecretsStore = Depends(get_secrets_store),
+    secrets_store: SecretsStore = Depends(_dep_secrets_store),
 ) -> JSONResponse:
     try:
         existing_secrets = await secrets_store.load()
-        if existing_secrets:
-            # Get existing custom secrets
-            custom_secrets = dict(existing_secrets.custom_secrets)
-
-            # Check if the secret to delete exists
-            if secret_id not in custom_secrets:
-                return JSONResponse(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    content={'error': f'Secret with ID {secret_id} not found'},
-                )
-
-            # Remove the secret
-            custom_secrets.pop(secret_id)
-
-            # Create a new UserSecrets that preserves provider tokens and remaining secrets
-            updated_secrets = UserSecrets(
-                custom_secrets=custom_secrets,  # type: ignore[arg-type]
-                provider_tokens=existing_secrets.provider_tokens,
+        if not existing_secrets:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'message': f'Secret {secret_id} not found'},
             )
 
-            await secrets_store.store(updated_secrets)
+        custom_secrets = dict(existing_secrets.custom_secrets)
+        if secret_id not in custom_secrets:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={'message': f'Secret {secret_id} not found'},
+            )
+
+        custom_secrets.pop(secret_id)
+        updated_user_secrets = existing_secrets.model_copy(
+            update={'custom_secrets': custom_secrets}
+        )
+        await secrets_store.store(updated_user_secrets)
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={'message': 'Secret deleted successfully'},
+            content={'message': f'Secret {secret_id} deleted successfully'},
         )
     except Exception as e:
-        logger.warning(f'Something went wrong deleting secret: {e}')
+        logger.warning(f'Failed to delete secret: {e}')
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': 'Something went wrong deleting secret'},
+            content={'error': 'Failed to delete secret'},
         )

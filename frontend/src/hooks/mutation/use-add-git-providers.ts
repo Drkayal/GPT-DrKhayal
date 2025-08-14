@@ -15,8 +15,14 @@ export const useAddGitProviders = () => {
       // Refresh settings (providers), installations list, and repositories right away
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["settings"], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ["installations"], exact: false }),
-        queryClient.invalidateQueries({ queryKey: ["repositories"], exact: false }),
+        queryClient.invalidateQueries({
+          queryKey: ["installations"],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["repositories"],
+          exact: false,
+        }),
       ]);
     },
     meta: {

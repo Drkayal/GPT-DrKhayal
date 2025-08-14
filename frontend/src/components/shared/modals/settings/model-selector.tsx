@@ -29,6 +29,7 @@ const MODEL_ALIASES: Record<string, string> = {
   "openai/gpt-5-2025-08-07": "Khayal-Pro",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getDisplayName(
   provider: string | null,
   model: string,
@@ -53,7 +54,7 @@ export function ModelSelector({
   const [selectedModel, setSelectedModel] = React.useState<string | null>(null);
 
   // Get the appropriate verified models array based on the selected provider
-  const getVerifiedModels = () => {
+  const getVerifiedModels = (): string[] => {
     if (selectedProvider === "openhands") {
       return VERIFIED_OPENHANDS_MODELS;
     }

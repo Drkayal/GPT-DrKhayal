@@ -10,7 +10,9 @@ export default function ChatRoute() {
   const { data: settings, isFetching } = useSettings();
 
   const [prompt, setPrompt] = React.useState("");
-  const [messages, setMessages] = React.useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [messages, setMessages] = React.useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
   const [isSending, setIsSending] = React.useState(false);
 
   const sendMessage = async () => {
@@ -22,14 +24,17 @@ export default function ChatRoute() {
     try {
       await streamChat(
         [{ role: "user", content: userMsg.content }],
-        settings?.llm_model,
+        settings?.LLM_MODEL,
         (token) => {
           setMessages((prev) => {
             const copy = [...prev];
             // append to last assistant message
             const lastIdx = copy.length - 1;
             if (lastIdx >= 0 && copy[lastIdx].role === "assistant") {
-              copy[lastIdx] = { ...copy[lastIdx], content: copy[lastIdx].content + token };
+              copy[lastIdx] = {
+                ...copy[lastIdx],
+                content: copy[lastIdx].content + token,
+              };
             }
             return copy;
           });
@@ -42,50 +47,50 @@ export default function ChatRoute() {
 
   const [imagePrompt, setImagePrompt] = React.useState("");
   const [videoPrompt, setVideoPrompt] = React.useState("");
-  const [jobStatus, setJobStatus] = React.useState<string | null>(null);
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [videoUrl, setVideoUrl] = React.useState<string | null>(null);
 
   const pollJob = async (jobId: string) => {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
+      // eslint-disable-next-line no-await-in-loop
       const j = await getJob(jobId);
       if (j.status === "COMPLETED") return j.result;
       if (j.status === "FAILED") throw new Error(j.error || "Job failed");
-      await new Promise((r) => setTimeout(r, 800));
+      // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+      await new Promise<void>((resolve) => setTimeout(resolve, 800));
     }
   };
 
   const generateImage = async () => {
     if (!imagePrompt.trim()) return;
-    setJobStatus("Creating image...");
     setImageUrl(null);
     try {
       const jobId = await startImageJob(imagePrompt);
       const result = await pollJob(jobId);
       setImageUrl(result?.path || null);
-      setJobStatus("Image ready");
     } catch (e) {
-      setJobStatus("Image generation failed");
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   };
 
   const generateVideo = async () => {
     if (!videoPrompt.trim()) return;
-    setJobStatus("Creating video...");
     setVideoUrl(null);
     try {
       const jobId = await startVideoJob(videoPrompt);
       const result = await pollJob(jobId);
       setVideoUrl(result?.path || null);
-      setJobStatus("Video ready");
     } catch (e) {
-      setJobStatus("Video generation failed");
+      // eslint-disable-next-line no-console
+      console.error(e);
     }
   };
 
   return (
     <div className="flex flex-col gap-6 p-6 w-full h-full overflow-auto">
-      <h1 className="text-2xl font-semibold text-white">General AI Chat</h1>
+      <h1 className="text-2xl font-semibold text-white">{t("CHAT$TITLE")}</h1>
 
       {isFetching ? (
         <div className="flex items-center gap-2 text-[#9099AC]">
@@ -93,7 +98,10 @@ export default function ChatRoute() {
         </div>
       ) : (
         <div className="text-[#9099AC] text-sm">
-          Model: <span className="text-white">{settings?.LLM?.MODEL || settings?.llm_model || "(not set)"}</span>
+          {t("CHAT$MODEL_LABEL")}{" "}
+          <span className="text-white">
+            {settings?.LLM_MODEL || t("CHAT$MODEL_NOT_SET")}
+          </span>
         </div>
       )}
 
@@ -101,7 +109,10 @@ export default function ChatRoute() {
         <div className="col-span-2 card-glow-accent p-4 h-[60vh] flex flex-col">
           <div className="flex-1 overflow-auto flex flex-col gap-3 pr-1">
             {messages.map((m, idx) => (
-              <div key={idx} className={m.role === "user" ? "text-white" : "text-glow"}>
+              <div
+                key={idx}
+                className={m.role === "user" ? "text-white" : "text-glow"}
+              >
                 <span className="text-xs opacity-70 mr-2">{m.role}</span>
                 {m.content}
               </div>
@@ -112,7 +123,7 @@ export default function ChatRoute() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder={"Ask anything..."}
+              placeholder={t("CHAT$ASK_ANYTHING")}
               className="flex-1 bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
             />
             <BrandButton
@@ -128,58 +139,43 @@ export default function ChatRoute() {
         </div>
 
         <div className="col-span-1 flex flex-col gap-4">
-          <div className="card-glow-gold p-4">
-            <h2 className="text-white font-medium mb-2">Generate Image</h2>
-            <input
-              value={imagePrompt}
-              onChange={(e) => setImagePrompt(e.target.value)}
-              placeholder={"Describe your image..."}
-              className="w-full bg-tertiary border border-[#717888] rounded-sm p-2 text-white mb-2"
+          <h2 className="text-white font-medium mb-2">
+            {t("CHAT$GENERATE_IMAGE")}
+          </h2>
+          <input
+            value={imagePrompt}
+            onChange={(e) => setImagePrompt(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && generateImage()}
+            placeholder={t("CHAT$DESCRIBE_IMAGE")}
+            className="bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
+          />
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={t("CHAT$GENERATED_IMAGE_ALT")}
+              className="max-w-full rounded-sm border border-[#717888]"
             />
-            <BrandButton
-              variant="glow"
-              type="button"
-              onClick={generateImage}
-              isDisabled={!imagePrompt.trim()}
-              className="btn-3d"
-            >
-              {t("GENERATE_IMAGE")}
-            </BrandButton>
-            {imageUrl && (
-              <div className="mt-3">
-                <img src={imageUrl} alt="generated" className="max-w-full rounded-sm border border-[#717888]" />
-              </div>
-            )}
-          </div>
+          )}
 
-          <div className="card-glow-gold p-4">
-            <h2 className="text-white font-medium mb-2">Generate Video</h2>
-            <input
-              value={videoPrompt}
-              onChange={(e) => setVideoPrompt(e.target.value)}
-              placeholder={"Describe your video..."}
-              className="w-full bg-tertiary border border-[#717888] rounded-sm p-2 text-white mb-2"
-            />
-            <BrandButton
-              variant="glow"
-              type="button"
-              onClick={generateVideo}
-              isDisabled={!videoPrompt.trim()}
-              className="btn-3d"
+          <h2 className="text-white font-medium mb-2">
+            {t("CHAT$GENERATE_VIDEO")}
+          </h2>
+          <input
+            value={videoPrompt}
+            onChange={(e) => setVideoPrompt(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && generateVideo()}
+            placeholder={t("CHAT$DESCRIBE_VIDEO")}
+            className="bg-tertiary border border-[#717888] rounded-sm p-2 text-white"
+          />
+          {videoUrl && (
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent underline"
             >
-              {t("GENERATE_VIDEO")}
-            </BrandButton>
-            {videoUrl && (
-              <div className="mt-3 text-[#9099AC] text-sm break-all">
-                <a href={videoUrl} target="_blank" rel="noreferrer" className="text-accent underline">
-                  Download Video
-                </a>
-              </div>
-            )}
-          </div>
-
-          {jobStatus && (
-            <div className="text-[#9099AC] text-sm">{jobStatus}</div>
+              {t("CHAT$DOWNLOAD_VIDEO")}
+            </a>
           )}
         </div>
       </section>

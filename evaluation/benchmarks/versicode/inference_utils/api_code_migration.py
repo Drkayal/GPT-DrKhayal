@@ -55,9 +55,9 @@ def predict(content, model_name):
     return final_ans
 
 
-def bulid_prompt(description, old_version, old_code, new_version) -> str:
+def build_prompt(description, old_version, old_code, new_version) -> str:
     """
-    build prompt
+    Build prompt
     :param version:
     :param description:
     :param masked_code:
@@ -105,7 +105,7 @@ for data in data_list:
         description = data['description']  # 功能描述
         old_code = data['old_code']  # mask后的代码
 
-        instruction = bulid_prompt(description, old_version, old_code, new_version)
+        instruction = build_prompt(description, old_version, old_code, new_version)
         truncated_text = truncate_text(instruction, max_tokens)
         prediction = predict(truncated_text, model_name)
 

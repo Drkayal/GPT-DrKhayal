@@ -1,6 +1,8 @@
 /* eslint-disable i18next/no-literal-string */
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 import { useSettings } from "#/hooks/query/use-settings";
 import { useAddGitProviders } from "#/hooks/mutation/use-add-git-providers";
 import { useUserProviders } from "#/hooks/use-user-providers";
@@ -12,8 +14,6 @@ import {
 } from "#/utils/custom-toast-handlers";
 import { retrieveAxiosErrorMessage } from "#/utils/retrieve-axios-error-message";
 import { RepoConnector } from "#/components/features/home/repo-connector";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
 
 interface ProviderAuth {
   token: string;
@@ -50,10 +50,19 @@ export default function ConnectGitHubScreen() {
   React.useEffect(() => {
     // When providers are set, ensure repository queries are hot and scroll into view
     if (providers.length > 0) {
-      queryClient.invalidateQueries({ queryKey: ["repositories"], exact: false });
-      queryClient.invalidateQueries({ queryKey: ["installations"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["repositories"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["installations"],
+        exact: false,
+      });
       if (repoSectionRef.current) {
-        repoSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        repoSectionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     }
   }, [providers.length, queryClient]);
@@ -78,7 +87,10 @@ export default function ConnectGitHubScreen() {
           setGithubHostInputHasValue(false);
           // Bring repo list into view right after save
           if (repoSectionRef.current) {
-            repoSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+            repoSectionRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
           }
         },
         onError: (error) => {
@@ -89,11 +101,14 @@ export default function ConnectGitHubScreen() {
     );
   };
 
-  const handleRepoSelection = React.useCallback((repo: any) => {
-    if (!repo) return;
-    // Navigate to workspace route after selection
-    navigate("/workspace", { replace: false });
-  }, [navigate]);
+  type MinimalRepo = { id?: string; name?: string } | string | null | undefined;
+  const handleRepoSelection = React.useCallback(
+    (repo: MinimalRepo) => {
+      if (!repo) return;
+      navigate("/workspace", { replace: false });
+    },
+    [navigate],
+  );
 
   const startGithubOAuth = async () => {
     try {

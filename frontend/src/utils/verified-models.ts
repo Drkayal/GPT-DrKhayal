@@ -6,7 +6,7 @@ export const VERIFIED_PROVIDERS = [
   "mistral",
   "openrouter",
   "openhands",
-] as const;
+];
 
 // LiteLLM does not return the compatible GP-KhayaL models with the provider, so we list them here to set them ourselves
 // (e.g., they return `claude-sonnet-4-20250514` instead of `openhands/claude-sonnet-4-20250514`)
@@ -22,6 +22,24 @@ export const VERIFIED_OPENHANDS_MODELS = [
   "devstral-medium-2507",
   "kimi-k2-0711-preview",
   "qwen3-coder-480b",
+];
+
+// Add minimal verified sets for other providers to satisfy usage across the app
+export const VERIFIED_OPENAI_MODELS: string[] = ["gpt-4o", "gpt-4o-mini"];
+export const VERIFIED_ANTHROPIC_MODELS: string[] = [
+  "claude-3-5-sonnet-20241022",
+];
+export const VERIFIED_MISTRAL_MODELS: string[] = [
+  "mistral-large-latest",
+  "ministral-8b",
+];
+
+// A generic union list used by some components to filter "verified"
+export const VERIFIED_MODELS: string[] = [
+  ...VERIFIED_OPENAI_MODELS,
+  ...VERIFIED_ANTHROPIC_MODELS,
+  ...VERIFIED_MISTRAL_MODELS,
+  ...VERIFIED_OPENHANDS_MODELS,
 ];
 
 // Default model for GP-KhayaL provider

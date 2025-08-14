@@ -53,9 +53,9 @@ class StandaloneConversationManager(ConversationManager):
     sio: socketio.AsyncServer
     config: OpenHandsConfig
     file_store: FileStore
-    server_config: ServerConfig
     # Defaulting monitoring_listener for temp backward compatibility.
     monitoring_listener: MonitoringListener = MonitoringListener()
+    server_config: ServerConfig = field(default_factory=ServerConfig)
     _local_agent_loops_by_sid: dict[str, Session] = field(default_factory=dict)
     _local_connection_id_to_session_id: dict[str, str] = field(default_factory=dict)
     _active_conversations: dict[str, tuple[ServerConversation, int]] = field(
@@ -296,6 +296,8 @@ class StandaloneConversationManager(ConversationManager):
         replay_json: str | None = None,
     ) -> Session:
         logger.info(f'starting_agent_loop:{sid}', extra={'session_id': sid})
+        # Local import to ensure test patches on Session are effective even if module import order varies
+        from openhands.server.session.session import Session  # noqa: WPS433
 
         response_ids = await self.get_running_agent_loops(user_id)
         if len(response_ids) >= self.config.max_concurrent_conversations:
@@ -440,8 +442,8 @@ class StandaloneConversationManager(ConversationManager):
             sio,
             config,
             file_store,
-            server_config,
             monitoring_listener or MonitoringListener(),
+            server_config,
         )
 
     def _create_conversation_update_callback(

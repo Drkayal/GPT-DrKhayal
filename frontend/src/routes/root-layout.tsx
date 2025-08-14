@@ -55,12 +55,15 @@ export default function RootLayout() {
   const settings = useSettings();
 
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (navigation.state !== "idle") {
       setIsNavigating(true);
     } else {
-      const id = setTimeout(() => setIsNavigating(false), 150);
-      return () => clearTimeout(id);
+      timeoutId = setTimeout(() => setIsNavigating(false), 150);
     }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [navigation.state, location.pathname]);
 
   // Prefetch heavy route chunks optimistically
@@ -91,11 +94,17 @@ export default function RootLayout() {
     const isFetchingSettings = settings.isFetching;
     const isFetchingBalance = balance.isFetching;
     return (
-      isNavigating || isFetchingAuth || isFetchingSettings || isFetchingBalance || config.isLoading
+      isNavigating ||
+      isFetchingAuth ||
+      isFetchingSettings ||
+      isFetchingBalance ||
+      config.isLoading
     );
   }, [isNavigating, settings.isFetching, balance.isFetching, config.isLoading]);
 
-  const loaderMessage = isNavigating ? "Loading..." : (settings.isFetching ? "Loading settings..." : undefined);
+  let loaderMessage: string | undefined;
+  if (isNavigating) loaderMessage = "Loading...";
+  else if (settings.isFetching) loaderMessage = "Loading settings...";
 
   return (
     <div className="h-full w-full">

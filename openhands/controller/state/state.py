@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import os
-import pickle
+import cloudpickle as pickle
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -119,7 +119,8 @@ class State:
     def save_to_session(
         self, sid: str, file_store: FileStore, user_id: str | None
     ) -> None:
-        pickled = pickle.dumps(self)
+        state_dict = self.__getstate__()
+        pickled = pickle.dumps(state_dict)
         logger.debug(f'Saving state to session {sid}:{self.agent_state}')
         encoded = base64.b64encode(pickled).decode('utf-8')
         try:
@@ -150,7 +151,12 @@ class State:
                 get_conversation_agent_state_filename(sid, user_id)
             )
             pickled = base64.b64decode(encoded)
-            state = pickle.loads(pickled)
+            payload = pickle.loads(pickled)
+            if isinstance(payload, dict):
+                state = State()
+                state.__setstate__(payload)
+            else:
+                state = payload
         except FileNotFoundError:
             # if user_id is provided, we are in a saas/remote use case
             # and we need to check if the state is in the old directory.
@@ -158,7 +164,12 @@ class State:
                 filename = get_conversation_agent_state_filename(sid)
                 encoded = file_store.read(filename)
                 pickled = base64.b64decode(encoded)
-                state = pickle.loads(pickled)
+                payload = pickle.loads(pickled)
+                if isinstance(payload, dict):
+                    state = State()
+                    state.__setstate__(payload)
+                else:
+                    state = payload
             else:
                 raise FileNotFoundError(
                     f'Could not restore state from session file for sid: {sid}'

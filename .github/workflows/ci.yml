@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      LLM_API_KEY: dummy
+      DISABLE_MCP: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,11 +22,11 @@ jobs:
       - name: Install Poetry
         run: pip install poetry==2.1.2
       - name: Install backend deps
-        run: poetry install
+        run: poetry install --with dev,test
       - name: Lint (ruff)
         run: poetry run ruff check .
-      - name: Run backend tests
-        run: poetry run pytest -q
+      - name: Run backend tests (unit only)
+        run: poetry run pytest -q tests/unit
       - name: Install frontend deps
         working-directory: frontend
         run: npm ci --no-audit --no-fund

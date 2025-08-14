@@ -1,21 +1,34 @@
-export async function streamChat(messages: { role: string; content: string }[], model?: string, onToken?: (t: string) => void): Promise<void> {
+export async function streamChat(
+  messages: { role: string; content: string }[],
+  model?: string,
+  onToken?: (t: string) => void,
+): Promise<void> {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, model, stream: true }),
   });
   if (!res.body) return;
+
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  while (true) {
-    const { value, done } = await reader.read();
+  let done = false;
+
+  while (!done) {
+    // eslint-disable-next-line no-await-in-loop
+    const readResult = await reader.read();
+    done = readResult.done ?? false;
     if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buffer.indexOf("\n\n")) !== -1) {
+
+    const chunk = decoder.decode(readResult.value, { stream: true });
+    buffer += chunk;
+
+    let idx = buffer.indexOf("\n\n");
+    while (idx !== -1) {
       const eventChunk = buffer.slice(0, idx);
       buffer = buffer.slice(idx + 2);
+
       const lines = eventChunk.split("\n");
       let data = "";
       for (const line of lines) {
@@ -24,6 +37,8 @@ export async function streamChat(messages: { role: string; content: string }[], 
         }
       }
       if (data && onToken) onToken(data);
+
+      idx = buffer.indexOf("\n\n");
     }
   }
 }
@@ -48,7 +63,15 @@ export async function startVideoJob(prompt: string): Promise<string> {
   return j.job_id as string;
 }
 
-export async function getJob(jobId: string): Promise<any> {
+export type JobStatus = "PENDING" | "RUNNING" | "COMPLETED" | "FAILED";
+export interface JobResponse {
+  id: string;
+  status: JobStatus;
+  result?: { path?: string };
+  error?: string;
+}
+
+export async function getJob(jobId: string): Promise<JobResponse> {
   const res = await fetch(`/api/jobs/${jobId}`);
-  return await res.json();
+  return res.json();
 }

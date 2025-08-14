@@ -55,9 +55,9 @@ def predict(content, model_name):
     return final_ans
 
 
-def bulid_prompt(version, description) -> str:
+def build_prompt(version, description) -> str:
     """
-    build prompt
+    Build prompt
     :param version:
     :param description:
     :param masked_code:
@@ -112,7 +112,7 @@ for data in data_list:
         version = data['dependency'] + data['version']  # package == x.x.x
         description = data['description']  # func description
 
-        instruction = bulid_prompt(version, description)
+        instruction = build_prompt(version, description)
         truncated_text = truncate_text(instruction, max_tokens)
         prediction = predict(truncated_text, model_name)
 

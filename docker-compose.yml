@@ -10,6 +10,11 @@ services:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE:-docker.all-hands.dev/all-hands-ai/runtime:0.51-nikolaik}
       #- SANDBOX_USER_ID=${SANDBOX_USER_ID:-1234} # enable this only if you want a specific non-root sandbox user but you will have to manually adjust permissions of ~/.openhands for this user
       - WORKSPACE_MOUNT_PATH=${WORKSPACE_BASE:-$PWD/workspace}
+      - GITHUB_APP_CLIENT_ID=${GITHUB_APP_CLIENT_ID:-${GITHUB_ID}}
+      - GITHUB_APP_CLIENT_SECRET=${GITHUB_APP_CLIENT_SECRET:-${GITHUB_SECRET}}
+      - FRONTEND_REDIRECT_URL=${FRONTEND_REDIRECT_URL:-https://gp-khayal.top}
+      - OPENHANDS_CONFIG_CLS=${OPENHANDS_CONFIG_CLS:-openhands.server.config.server_config.CursorLikeServerConfig}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - "3000:3000"
     extra_hosts:

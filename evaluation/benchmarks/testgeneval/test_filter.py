@@ -170,6 +170,7 @@ def filter_passing_tests(
 ) -> tuple[str, list[str], list[str]]:
     """
     Filter tests based on their execution results.
+
     Returns:
         Tuple containing:
         - Modified test content with only passing tests

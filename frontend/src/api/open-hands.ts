@@ -312,7 +312,9 @@ class OpenHands {
     return data.results;
   }
 
-  static async deleteUserConversation(conversationId: string): Promise<boolean> {
+  static async deleteUserConversation(
+    conversationId: string,
+  ): Promise<boolean> {
     try {
       await openHands.delete(`/api/conversations/${conversationId}`);
       if (this.currentConversation?.conversation_id === conversationId) {

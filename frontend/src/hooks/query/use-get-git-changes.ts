@@ -14,10 +14,9 @@ export const useGetGitChanges = () => {
   const result = useQuery({
     queryKey: ["file_changes", conversationId],
     queryFn: () => OpenHands.getGitChanges(conversationId),
-    retry: (failureCount, error) => {
+    retry: (failureCount) =>
       // Retry a few times while runtime is starting
-      return failureCount < 5;
-    },
+      failureCount < 5,
     retryDelay: (attempt) => Math.min(2000 * attempt, 8000),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 15, // 15 minutes
@@ -66,6 +65,5 @@ export const useGetGitChanges = () => {
     isLoading: result.isLoading,
     isSuccess: result.isSuccess,
     isError: result.isError,
-    error: result.error,
   };
 };
