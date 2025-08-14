@@ -29,6 +29,7 @@ const MODEL_ALIASES: Record<string, string> = {
   "openai/gpt-5-2025-08-07": "Khayal-Pro",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getDisplayName(
   provider: string | null,
   model: string,
