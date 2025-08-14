@@ -43,7 +43,7 @@ def run_inference(model_name, origin_data_list):
         description = data['description']  # 功能描述
         old_code = data['old_code']  # mask后的代码
 
-        instruction = bulid_prompt(description, old_version, old_code, new_version)
+        instruction = build_prompt(description, old_version, old_code, new_version)
         test_list.append(instruction)
 
     sampling_params = SamplingParams(n=6, temperature=0.8, top_p=0.95, max_tokens=512)
@@ -80,9 +80,9 @@ def run_inference(model_name, origin_data_list):
     torch.cuda.empty_cache()
 
 
-def bulid_prompt(description, old_version, old_code, new_version) -> str:
+def build_prompt(description, old_version, old_code, new_version) -> str:
     """
-    build prompt
+    Build prompt
     :param version:
     :param description:
     :param masked_code:

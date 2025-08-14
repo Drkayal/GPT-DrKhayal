@@ -41,7 +41,7 @@ def run_inference(model_name, origin_data_list):
         version = data['dependency'] + data['version']  # package == x.x.x
         description = data['description']  # func description
 
-        instruction = bulid_prompt(version, description)
+        instruction = build_prompt(version, description)
         test_list.append(instruction)
 
     sampling_params = SamplingParams(n=6, temperature=0.8, top_p=0.95, max_tokens=64)
@@ -78,9 +78,9 @@ def run_inference(model_name, origin_data_list):
     torch.cuda.empty_cache()
 
 
-def bulid_prompt(version, description) -> str:
+def build_prompt(version, description) -> str:
     """
-    build prompt
+    Build prompt
     :param version:
     :param description:
     :param masked_code:
