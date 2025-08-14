@@ -13,6 +13,8 @@ services:
       - GITHUB_APP_CLIENT_ID=${GITHUB_APP_CLIENT_ID}
       - GITHUB_APP_CLIENT_SECRET=${GITHUB_APP_CLIENT_SECRET}
       - FRONTEND_REDIRECT_URL=${FRONTEND_REDIRECT_URL:-https://gp-khayal.top}
+      - OPENHANDS_CONFIG_CLS=${OPENHANDS_CONFIG_CLS:-openhands.server.config.server_config.CursorLikeServerConfig}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - "3000:3000"
     extra_hosts:
