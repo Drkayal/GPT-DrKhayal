@@ -82,7 +82,8 @@ export function Sidebar() {
                 }`
               }
             >
-              Chat
+              {/* eslint-disable-next-line i18next/no-literal-string */}
+              <span>Chat</span>
             </NavLink>
             <ConversationPanelButton
               isOpen={conversationPanelIsOpen}

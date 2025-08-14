@@ -101,10 +101,10 @@ export default function ConnectGitHubScreen() {
     );
   };
 
+  type MinimalRepo = { id?: string; name?: string } | string | null | undefined;
   const handleRepoSelection = React.useCallback(
-    (repo: any) => {
+    (repo: MinimalRepo) => {
       if (!repo) return;
-      // Navigate to workspace route after selection
       navigate("/workspace", { replace: false });
     },
     [navigate],

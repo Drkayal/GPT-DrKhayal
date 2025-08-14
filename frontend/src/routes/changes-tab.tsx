@@ -81,13 +81,14 @@ function GitChanges() {
   return (
     <main className="h-full overflow-y-scroll px-4 py-3 gap-3 flex flex-col items-center">
       <div className="card-glow-accent p-4 w-full">
-        {showSkeleton ? (
+        {showSkeleton && (
           <div className="space-y-4">
             <Skeleton />
             <Skeleton />
             <Skeleton />
           </div>
-        ) : !isSuccess || !gitChanges.length ? (
+        )}
+        {!showSkeleton && (!isSuccess || !gitChanges.length) && (
           <div className="relative flex h-full w-full items-center">
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2">
               {statusMessage && (
@@ -107,7 +108,8 @@ function GitChanges() {
               )}
             </div>
           </div>
-        ) : (
+        )}
+        {!showSkeleton && isSuccess && gitChanges.length > 0 && (
           <ChangesList />
         )}
       </div>

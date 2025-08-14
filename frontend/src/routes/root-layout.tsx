@@ -99,11 +99,9 @@ export default function RootLayout() {
     );
   }, [isNavigating, settings.isFetching, balance.isFetching, config.isLoading]);
 
-  const loaderMessage = isNavigating
-    ? "Loading..."
-    : settings.isFetching
-      ? "Loading settings..."
-      : undefined;
+  let loaderMessage: string | undefined;
+  if (isNavigating) loaderMessage = "Loading...";
+  else if (settings.isFetching) loaderMessage = "Loading settings...";
 
   return (
     <div className="h-full w-full">

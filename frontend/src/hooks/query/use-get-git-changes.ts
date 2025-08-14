@@ -65,6 +65,6 @@ export const useGetGitChanges = () => {
     isLoading: result.isLoading,
     isSuccess: result.isSuccess,
     isError: result.isError,
-    error: result.isError ? result.error : null,
+    error: result.error,
   };
 };
