@@ -369,3 +369,8 @@ help:
 # Phony targets
 .PHONY: build check-dependencies check-system check-python check-npm check-nodejs check-docker check-poetry install-python-dependencies install-frontend-dependencies install-pre-commit-hooks lint-backend lint-frontend lint test-frontend test build-frontend start-backend start-frontend _run_setup run run-wsl setup-config setup-config-prompts setup-config-basic openhands-cloud-run docker-dev docker-run clean help
 .PHONY: kind
+
+migrate-secrets:
+	@echo "$(YELLOW)Encrypting existing user provider tokens (if any) ...$(RESET)"
+	@poetry run python scripts/migrate_encrypt_secrets.py || true
+	@echo "$(GREEN)Migration completed.$(RESET)"

@@ -17,7 +17,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - OPENHANDS_CONVERSATION_VALIDATOR_CLS=${OPENHANDS_CONVERSATION_VALIDATOR_CLS:-openhands.storage.conversation.conversation_validator.CookieConversationValidator}
       - SECRETS_ENC_KEY=${SECRETS_ENC_KEY}
-      - HIDE_LLM_SETTINGS=${HIDE_LLM_SETTINGS:-false}
+      - HIDE_LLM_SETTINGS=${HIDE_LLM_SETTINGS:-true}
+      - PERMITTED_CORS_ORIGINS=${PERMITTED_CORS_ORIGINS:-https://gp-khayal.top}
     ports:
       - "3000:3000"
     extra_hosts:
