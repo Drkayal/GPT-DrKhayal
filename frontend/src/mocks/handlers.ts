@@ -117,6 +117,26 @@ const openHandsHandlers = [
     ]),
   ),
 
+  http.get("/api/options/models-with-alias", async () =>
+    HttpResponse.json({
+      models: [
+        "gpt-3.5-turbo",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "anthropic/claude-3.5",
+        "anthropic/claude-sonnet-4-20250514",
+        "openhands/claude-sonnet-4-20250514",
+        "google/gemini-1.5-pro",
+      ],
+      aliases: {
+        "openai/gpt-4o": "GP-K",
+        "anthropic/claude-3-5-sonnet-20241022": "KhayaL-AI",
+        "google/gemini-1.5-pro": "YE-21",
+        "openai/gpt-5-2025-08-07": "Khayal-Pro",
+      },
+    }),
+  ),
+
   http.get("/api/options/agents", async () =>
     HttpResponse.json(["CodeActAgent", "CoActAgent"]),
   ),
@@ -161,7 +181,7 @@ export const handlers = [
     HttpResponse.json(null, { status: 200 }),
   ),
   http.get("/api/options/config", () => {
-    const mockSaas = import.meta.env.VITE_MOCK_SAAS === "true";
+    const mockSaas = true; // force SaaS in tests expecting SaaS-specific UI
 
     const config: GetConfigResponse = {
       APP_MODE: mockSaas ? "saas" : "oss",
@@ -175,11 +195,9 @@ export const handlers = [
         ENABLE_JIRA_DC: false,
         ENABLE_LINEAR: false,
       },
-      // Uncomment the following to test the maintenance banner
-      // MAINTENANCE: {
-      //   startTime: "2024-01-15T10:00:00-05:00", // EST timestamp
-      // },
-    };
+      AUTH_URL: null,
+      PROVIDERS_CONFIGURED: ["github"],
+    } as unknown as GetConfigResponse;
 
     return HttpResponse.json(config);
   }),

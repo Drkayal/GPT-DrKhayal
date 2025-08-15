@@ -2,7 +2,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useSettings } from "#/hooks/query/use-settings";
 import { useAddGitProviders } from "#/hooks/mutation/use-add-git-providers";
 import { useUserProviders } from "#/hooks/use-user-providers";
@@ -31,6 +31,7 @@ export default function ConnectGitHubScreen() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: settings, isLoading } = useSettings();
   const { providers } = useUserProviders();
@@ -46,6 +47,23 @@ export default function ConnectGitHubScreen() {
   const isGitHubTokenSet = providers.includes("github");
 
   const repoSectionRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    // Show OAuth error if present
+    const oauthError = searchParams.get("oauth_error");
+    if (oauthError) {
+      const map: Record<string, string> = {
+        invalid_state: "GitHub OAuth failed: invalid state. Please try again.",
+        oauth_not_configured: "GitHub OAuth is not configured.",
+        no_access_token: "GitHub OAuth failed to obtain access token.",
+        oauth_exchange_failed: "GitHub OAuth exchange failed. Please try again.",
+      };
+      displayErrorToast(map[oauthError] || `OAuth error: ${oauthError}`);
+      // Clean the param from URL after showing once
+      searchParams.delete("oauth_error");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   React.useEffect(() => {
     // When providers are set, ensure repository queries are hot and scroll into view

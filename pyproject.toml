@@ -82,6 +82,7 @@ python-pptx = "*"
 pylatexenc = "*"
 python-docx = "*"
 bashlex = "^0.18"
+cryptography = "*"
 
 # TODO: These are integrations that should probably be optional
 redis = ">=5.2,<7.0"

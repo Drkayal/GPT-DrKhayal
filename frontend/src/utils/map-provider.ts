@@ -5,7 +5,10 @@ export const PROVIDER_NAME_MAP: Record<string, string> = {
   google: "Google (Gemini)",
   mistral: "Mistral",
   openrouter: "OpenRouter",
-  openhands: "GP-KhayaL",
+  openhands: "OpenHands",
+  azure: "Azure",
+  azure_ai: "Azure AI Studio",
+  vertex_ai: "VertexAI",
 };
 
 export const mapProvider = (provider: string) =>
