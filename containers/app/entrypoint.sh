@@ -35,9 +35,20 @@ if [[ "$INSTALL_THIRD_PARTY_RUNTIMES" == "true" ]]; then
   fi
 fi
 
+# Optional backup on start
+if [[ "${BACKUP_ON_START}" == "true" ]]; then
+  echo "Running backup of /.openhands before start..."
+  /app/.venv/bin/python /app/scripts/backup_openhands.py || echo "Backup step skipped/failed"
+fi
+
 if [[ "$SANDBOX_USER_ID" -eq 0 ]]; then
   echo "Running OpenHands as root"
   export RUN_AS_OPENHANDS=false
+  # Migrate secrets (run as root when running app as root)
+  if [[ -n "$SECRETS_ENC_KEY" ]]; then
+    echo "Running secrets migration (root)"
+    /app/.venv/bin/python /app/scripts/migrate_encrypt_secrets.py || true
+  fi
   "$@"
 else
   echo "Setting up enduser with id $SANDBOX_USER_ID"
@@ -68,6 +79,11 @@ else
   mkdir -p /home/enduser/.cache/huggingface/hub/
 
   usermod -aG $DOCKER_SOCKET_GID enduser
+  # Migrate secrets as enduser for correct ownership
+  if [[ -n "$SECRETS_ENC_KEY" ]]; then
+    echo "Running secrets migration (enduser)"
+    su enduser /bin/bash -c "/app/.venv/bin/python /app/scripts/migrate_encrypt_secrets.py" || true
+  fi
   echo "Running as enduser"
   su enduser /bin/bash -c "${*@Q}" # This magically runs any arguments passed to the script as a command
 fi
