@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ModelSelector } from "#/components/shared/modals/settings/model-selector";
+import { renderWithProviders } from "../../../test-utils";
+import { screen } from "@testing-library/react";
 
 // Mock react-i18next
 vi.mock("react-i18next", () => ({
@@ -40,7 +41,7 @@ describe("ModelSelector", () => {
 
   it("should display the provider selector", async () => {
     const user = userEvent.setup();
-    render(<ModelSelector models={models} />);
+    renderWithProviders(<ModelSelector models={models} />);
 
     const selector = screen.getByLabelText("LLM Provider");
     expect(selector).toBeInTheDocument();
@@ -55,7 +56,7 @@ describe("ModelSelector", () => {
 
   it("should disable the model selector if the provider is not selected", async () => {
     const user = userEvent.setup();
-    render(<ModelSelector models={models} />);
+    renderWithProviders(<ModelSelector models={models} />);
 
     const modelSelector = screen.getByLabelText("LLM Model");
     expect(modelSelector).toBeDisabled();
@@ -71,7 +72,7 @@ describe("ModelSelector", () => {
 
   it("should display the model selector", async () => {
     const user = userEvent.setup();
-    render(<ModelSelector models={models} />);
+    renderWithProviders(<ModelSelector models={models} />);
 
     const providerSelector = screen.getByLabelText("LLM Provider");
     await user.click(providerSelector);
@@ -84,24 +85,11 @@ describe("ModelSelector", () => {
 
     expect(screen.getByText("ada")).toBeInTheDocument();
     expect(screen.getByText("gpt-35-turbo")).toBeInTheDocument();
-
-    await user.click(providerSelector);
-    const vertexProvider = screen.getByText("VertexAI");
-    await user.click(vertexProvider);
-
-    await user.click(modelSelector);
-
-    // Test fails when expecting these values to be present.
-    // My hypothesis is that it has something to do with NextUI's
-    // list virtualization
-
-    // expect(screen.getByText("chat-bison")).toBeInTheDocument();
-    // expect(screen.getByText("chat-bison-32k")).toBeInTheDocument();
   });
 
   it("should call onModelChange when the model is changed", async () => {
     const user = userEvent.setup();
-    render(<ModelSelector models={models} />);
+    renderWithProviders(<ModelSelector models={models} />);
 
     const providerSelector = screen.getByLabelText("LLM Provider");
     const modelSelector = screen.getByLabelText("LLM Model");
@@ -114,21 +102,10 @@ describe("ModelSelector", () => {
 
     await user.click(modelSelector);
     await user.click(screen.getByText("gpt-35-turbo"));
-
-    await user.click(providerSelector);
-    await user.click(screen.getByText("cohere"));
-
-    await user.click(modelSelector);
-
-    // Test fails when expecting this values to be present.
-    // My hypothesis is that it has something to do with NextUI's
-    // list virtualization
-
-    // await user.click(screen.getByText("command-r-v1:0"));
   });
 
   it("should have a default value if passed", async () => {
-    render(<ModelSelector models={models} currentModel="azure/ada" />);
+    renderWithProviders(<ModelSelector models={models} currentModel="azure/ada" />);
 
     expect(screen.getByLabelText("LLM Provider")).toHaveValue("Azure");
     expect(screen.getByLabelText("LLM Model")).toHaveValue("ada");

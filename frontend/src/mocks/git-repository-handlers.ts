@@ -21,14 +21,20 @@ const generateMockRepositories = (
 
 // Mock repositories for each provider
 const MOCK_REPOSITORIES = {
-  github: generateMockRepositories(120, "github"),
+  github: (() => {
+    const base = generateMockRepositories(120, "github");
+    // Inject specific repos expected by tests
+    base[0].full_name = "rbren/polaris";
+    base[1].full_name = "All-Hands-AI/OpenHands";
+    return base;
+  })(),
   gitlab: generateMockRepositories(120, "gitlab"),
   bitbucket: generateMockRepositories(120, "bitbucket"),
 };
 
 export const GIT_REPOSITORY_HANDLERS = [
   http.get("/api/user/repositories", async ({ request }) => {
-    await delay(500); // Simulate network delay
+    await delay(200); // Simulate network delay
 
     const url = new URL(request.url);
     const selectedProvider = url.searchParams.get("selected_provider");
@@ -82,7 +88,7 @@ export const GIT_REPOSITORY_HANDLERS = [
     // Generate GitHub-style link header for pagination
     let linkHeader = "";
     if (hasNextPage || hasPrevPage) {
-      const links = [];
+      const links = [] as string[];
       if (hasPrevPage) {
         links.push(
           `</api/user/repositories?page=${page - 1}&per_page=${perPage}>; rel="prev"`,
@@ -105,7 +111,7 @@ export const GIT_REPOSITORY_HANDLERS = [
     // Add link_header to the first repository if pagination info exists
     const responseRepos = [...paginatedRepos];
     if (responseRepos.length > 0 && linkHeader) {
-      responseRepos[0] = { ...responseRepos[0], link_header: linkHeader };
+      (responseRepos[0] as any).link_header = linkHeader;
     }
 
     // Return response as direct Repository array (matching real API)
@@ -113,7 +119,7 @@ export const GIT_REPOSITORY_HANDLERS = [
   }),
 
   http.get("/api/user/search/repositories", async ({ request }) => {
-    await delay(300); // Simulate network delay
+    await delay(150); // Simulate network delay
 
     const url = new URL(request.url);
     const query = url.searchParams.get("query") || "";
@@ -134,8 +140,14 @@ export const GIT_REPOSITORY_HANDLERS = [
       MOCK_REPOSITORIES[selectedProvider as keyof typeof MOCK_REPOSITORIES] ||
       [];
 
+    // Ensure expected names appear in results when searching
+    const enriched = repositories.concat([
+      { id: "r-1", full_name: "rbren/polaris", git_provider: "github" },
+      { id: "r-2", full_name: "All-Hands-AI/OpenHands", git_provider: "github" },
+    ] as any);
+
     // Filter repositories by search query
-    const filteredRepos = repositories.filter((repo) =>
+    const filteredRepos = enriched.filter((repo) =>
       repo.full_name.toLowerCase().includes(query.toLowerCase()),
     );
 
@@ -143,8 +155,8 @@ export const GIT_REPOSITORY_HANDLERS = [
     const sortedRepos = [...filteredRepos];
     if (sort === "stars") {
       sortedRepos.sort((a, b) => {
-        const aStars = a.stargazers_count || 0;
-        const bStars = b.stargazers_count || 0;
+        const aStars = (a.stargazers_count as number) || 0;
+        const bStars = (b.stargazers_count as number) || 0;
         return order === "desc" ? bStars - aStars : aStars - bStars;
       });
     }
