@@ -4,7 +4,6 @@ gp-khayal.top {
     path /assets/*
   }
   handle @static {
-    uri strip_prefix /
     reverse_proxy openhands:3000
   }
   reverse_proxy openhands:3000 {
