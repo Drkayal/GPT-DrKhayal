@@ -21,6 +21,15 @@ from openhands.utils.llm import get_supported_llm_models
 app = APIRouter(prefix='/api/options', dependencies=get_dependencies())
 
 
+# Static mapping for model display names
+MODEL_DISPLAY_ALIASES: dict[str, str] = {
+    'openai/gpt-4o': 'GP-K',
+    'anthropic/claude-3-5-sonnet-20241022': 'KhayaL-AI',
+    'google/gemini-1.5-pro': 'YE-21',
+    'openai/gpt-5-2025-08-07': 'Khayal-Pro',
+}
+
+
 @app.get('/models', response_model=list[str])
 async def get_litellm_models() -> list[str]:
     """Get all models supported by LiteLLM.
@@ -37,6 +46,20 @@ async def get_litellm_models() -> list[str]:
         list[str]: A sorted list of unique model names.
     """
     return get_supported_llm_models(config)
+
+
+@app.get('/models-with-alias', response_model=dict)
+async def get_models_with_display_names() -> dict:
+    """Return a mapping of provider -> { separator, models } and a display alias map.
+
+    Allows the frontend to show user-friendly display names for select models while
+    preserving the underlying Provider/Model identifiers for correct routing.
+    """
+    # Preserve existing models list
+    models = get_supported_llm_models(config)
+    # Build alias map only for known pairs; do not guess
+    aliases = MODEL_DISPLAY_ALIASES.copy()
+    return {"models": models, "aliases": aliases}
 
 
 @app.get('/agents', response_model=list[str])

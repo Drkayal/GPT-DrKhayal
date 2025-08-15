@@ -69,6 +69,16 @@ class OpenHands {
   }
 
   /**
+   * Retrieve models plus display aliases mapping
+   */
+  static async getModelsWithAlias(): Promise<{ models: string[]; aliases: Record<string, string> }>{
+    const { data } = await openHands.get<{ models: string[]; aliases: Record<string, string> }>(
+      "/api/options/models-with-alias",
+    );
+    return data;
+  }
+
+  /**
    * Retrieve the list of agents available
    * @returns List of agents available
    */

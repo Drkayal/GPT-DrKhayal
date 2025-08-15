@@ -13,6 +13,7 @@ import {
   VERIFIED_OPENHANDS_MODELS,
 } from "#/utils/verified-models";
 import { extractModelAndProvider } from "#/utils/extract-model-and-provider";
+import { useAIConfigOptions } from "#/hooks/query/use-ai-config-options";
 
 interface ModelSelectorProps {
   isDisabled?: boolean;
@@ -21,39 +22,19 @@ interface ModelSelectorProps {
   onChange?: (model: string | null) => void;
 }
 
-// Static alias mapping: map full provider/model id to display name
-const MODEL_ALIASES: Record<string, string> = {
-  "openai/gpt-4o": "GP-K",
-  "anthropic/claude-3-5-sonnet-20241022": "KhayaL-AI",
-  "google/gemini-1.5-pro": "YE-21",
-  "openai/gpt-5-2025-08-07": "Khayal-Pro",
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getDisplayName(
-  provider: string | null,
-  model: string,
-  separator: string,
-): string {
-  const fullId = provider ? `${provider}${separator}${model}` : model;
-  const normalized =
-    provider === "openai" ? `openai/${model}` : fullId.replace(":", "/");
-  return MODEL_ALIASES[normalized] || model;
-}
-
 export function ModelSelector({
   isDisabled,
   models,
   currentModel,
   onChange,
 }: ModelSelectorProps) {
+  const { data: aiOptions } = useAIConfigOptions();
   const [, setLitellmId] = React.useState<string | null>(null);
   const [selectedProvider, setSelectedProvider] = React.useState<string | null>(
     null,
   );
   const [selectedModel, setSelectedModel] = React.useState<string | null>(null);
 
-  // Get the appropriate verified models array based on the selected provider
   const getVerifiedModels = (): string[] => {
     if (selectedProvider === "openhands") {
       return VERIFIED_OPENHANDS_MODELS;
@@ -63,9 +44,7 @@ export function ModelSelector({
 
   React.useEffect(() => {
     if (currentModel) {
-      // runs when resetting to defaults
       const { provider, model } = extractModelAndProvider(currentModel);
-
       setLitellmId(currentModel);
       setSelectedProvider(provider);
       setSelectedModel(model);
@@ -84,7 +63,6 @@ export function ModelSelector({
     const separator = models[selectedProvider || ""]?.separator || "";
     let fullModel = selectedProvider + separator + model;
     if (selectedProvider === "openai") {
-      // LiteLLM lists OpenAI models without the openai/ prefix
       fullModel = model;
     }
     setLitellmId(fullModel);
@@ -98,6 +76,20 @@ export function ModelSelector({
   };
 
   const { t } = useTranslation();
+
+  const renderModelItem = (model: string) => {
+    const provider = selectedProvider || "";
+    const separator = models[provider]?.separator || "/";
+    const fullId = provider ? `${provider}${separator}${model}` : model;
+    const normalized =
+      provider === "openai" ? model : fullId.replace(":", "/");
+    const display = aiOptions?.modelAliases?.[normalized] || model;
+    return (
+      <AutocompleteItem data-testid={`model-item-${model}`} key={model}>
+        {display}
+      </AutocompleteItem>
+    );
+  };
 
   return (
     <div className="flex flex-col md:flex-row w-[full] max-w-[680px] justify-between gap-4 md:gap-[46px]">
@@ -187,9 +179,7 @@ export function ModelSelector({
               .filter((model) =>
                 models[selectedProvider || ""]?.models?.includes(model),
               )
-              .map((model) => (
-                <AutocompleteItem key={model}>{model}</AutocompleteItem>
-              ))}
+              .map((model) => renderModelItem(model))}
           </AutocompleteSection>
           {models[selectedProvider || ""]?.models?.some(
             (model) => !getVerifiedModels().includes(model),
@@ -197,14 +187,7 @@ export function ModelSelector({
             <AutocompleteSection title={t(I18nKey.MODEL_SELECTOR$OTHERS)}>
               {models[selectedProvider || ""]?.models
                 .filter((model) => !getVerifiedModels().includes(model))
-                .map((model) => (
-                  <AutocompleteItem
-                    data-testid={`model-item-${model}`}
-                    key={model}
-                  >
-                    {model}
-                  </AutocompleteItem>
-                ))}
+                .map((model) => renderModelItem(model))}
             </AutocompleteSection>
           ) : null}
         </Autocomplete>
