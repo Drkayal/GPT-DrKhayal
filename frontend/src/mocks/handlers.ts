@@ -117,6 +117,26 @@ const openHandsHandlers = [
     ]),
   ),
 
+  http.get("/api/options/models-with-alias", async () =>
+    HttpResponse.json({
+      models: [
+        "gpt-3.5-turbo",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "anthropic/claude-3.5",
+        "anthropic/claude-sonnet-4-20250514",
+        "openhands/claude-sonnet-4-20250514",
+        "google/gemini-1.5-pro",
+      ],
+      aliases: {
+        "openai/gpt-4o": "GP-K",
+        "anthropic/claude-3-5-sonnet-20241022": "KhayaL-AI",
+        "google/gemini-1.5-pro": "YE-21",
+        "openai/gpt-5-2025-08-07": "Khayal-Pro",
+      },
+    }),
+  ),
+
   http.get("/api/options/agents", async () =>
     HttpResponse.json(["CodeActAgent", "CoActAgent"]),
   ),
