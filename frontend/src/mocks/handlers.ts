@@ -181,7 +181,7 @@ export const handlers = [
     HttpResponse.json(null, { status: 200 }),
   ),
   http.get("/api/options/config", () => {
-    const mockSaas = import.meta.env.VITE_MOCK_SAAS === "true";
+    const mockSaas = true; // force SaaS in tests expecting SaaS-specific UI
 
     const config: GetConfigResponse = {
       APP_MODE: mockSaas ? "saas" : "oss",
@@ -195,11 +195,9 @@ export const handlers = [
         ENABLE_JIRA_DC: false,
         ENABLE_LINEAR: false,
       },
-      // Uncomment the following to test the maintenance banner
-      // MAINTENANCE: {
-      //   startTime: "2024-01-15T10:00:00-05:00", // EST timestamp
-      // },
-    };
+      AUTH_URL: null,
+      PROVIDERS_CONFIGURED: ["github"],
+    } as unknown as GetConfigResponse;
 
     return HttpResponse.json(config);
   }),
