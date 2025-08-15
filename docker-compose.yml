@@ -8,7 +8,7 @@ services:
     container_name: openhands-app
     environment:
       - SANDBOX_RUNTIME_CONTAINER_IMAGE=${SANDBOX_RUNTIME_CONTAINER_IMAGE:-docker.all-hands.dev/all-hands-ai/runtime:0.51-nikolaik}
-      #- SANDBOX_USER_ID=${SANDBOX_USER_ID:-1234} # enable this only if you want a specific non-root sandbox user but you will have to manually adjust permissions of ~/.openhands for this user
+      - SANDBOX_USER_ID=${SANDBOX_USER_ID:-1000}
       - SANDBOX_VOLUMES=${WORKSPACE_BASE:-$PWD/workspace}:/workspace:rw
       - GITHUB_APP_CLIENT_ID=${GITHUB_APP_CLIENT_ID:-${GITHUB_ID}}
       - GITHUB_APP_CLIENT_SECRET=${GITHUB_APP_CLIENT_SECRET:-${GITHUB_SECRET}}
@@ -19,6 +19,7 @@ services:
       - SECRETS_ENC_KEY=${SECRETS_ENC_KEY}
       - HIDE_LLM_SETTINGS=${HIDE_LLM_SETTINGS:-true}
       - PERMITTED_CORS_ORIGINS=${PERMITTED_CORS_ORIGINS:-https://gp-khayal.top}
+      - FILE_UPLOADS_MAX_FILE_SIZE_MB=${FILE_UPLOADS_MAX_FILE_SIZE_MB:-32}
     ports:
       - "3000:3000"
     extra_hosts:
